@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import Head from 'next/head';
 import { Toaster } from 'react-hot-toast';
+import { Analytics } from '@vercel/analytics/react';
 
 import './globals.css';
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }) {
             <FontProvider>
               <Toaster />
               {children}
+              <Analytics />
             </FontProvider>
           </AuthProvider>
         </FBProvider>
