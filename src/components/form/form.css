@@ -1,0 +1,38 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin: auto;
+    background-color: #F9F9F9;
+    padding: 2rem 5rem 1.5rem 5rem;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    border: double 2px transparent;
+    background-image: linear-gradient(white, white),
+        linear-gradient(to right, #7063c5, #1e1361);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    gap: 16px;
+}
+
+.form-title {
+    color: #222222;
+    font-size: 24px;
+    margin-bottom: 16px;
+    align-self: center;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 2s steps(30, end);
+}
+
+@keyframes typing {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 100%;
+    }
+}

@@ -1,0 +1,13 @@
+.input {
+    background-color: white;
+    color: #222222;
+    border: double 2px transparent;
+    border-radius: 8px;
+    background-image: linear-gradient(white, white),
+        linear-gradient(to right, #7063c566, #1e136155);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    font-size: 16px;
+    padding: 12px;
+    outline: none;
+}
