@@ -1,0 +1,39 @@
+.sidebar {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-chats {
+    display: flex;
+    flex: 1;
+}
+
+.sidebar-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 1.75rem;
+}
+
+.sidebar-button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    gap: 6px;
+}
+
+.sidebar-button-img {
+    width: 28px;
+    height: 28px;
+}
+
+.sidebar-button-text {
+    font-size: 14px;
+}
