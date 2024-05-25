@@ -1,7 +1,13 @@
 .redirector {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
     margin-top: 12px;
+    padding-left: 2px;
 }
 
 .redirector-text {
+    font-weight: 500;
     color: #757575;
 }

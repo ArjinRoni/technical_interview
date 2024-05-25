@@ -1,6 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 
+import '../../styles/page.css';
+
 import { Form, Input, Redirector, Button } from '@/components';
 import { checkError } from '@/utils/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,7 +46,7 @@ const Login = () => {
           setValue={setEmail}
         />
         <Input type="password" placeholder="Password" value={password} setValue={setPassword} />
-        <Redirector text="New around here? Sign up instead →" href="/signup" />
+        <Redirector text="New around here? Sign up instead" href="/signup" />
         <Button type="submit" text="Login" />
       </Form>
     </div>

@@ -59,7 +59,7 @@ const SignUp = () => {
           value={confirmPassword}
           setValue={setConfirmPassword}
         />
-        <Redirector text="Already have an account? Log in instead →" href="/login" />
+        <Redirector text="Already have an account? Log in instead" href="/login" />
         <Button type="submit" text="Sign up" />
       </Form>
     </div>
