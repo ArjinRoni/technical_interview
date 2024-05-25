@@ -20,6 +20,10 @@ const SignUp = () => {
 
     const hasError = checkError([
       {
+        condition: !name || name.trim().length === 0,
+        message: 'Please enter your name.',
+      },
+      {
         condition:
           !email ||
           email.trim().length === 0 ||

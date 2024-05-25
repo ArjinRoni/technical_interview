@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
@@ -22,6 +22,24 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setLoading(true);
+
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
+
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const login = async ({ email, password }) => {
     const auth = getAuth();
@@ -32,7 +50,7 @@ export const AuthProvider = ({ children }) => {
         const user = userCredential.user;
         // ...
 
-        setUser({ email });
+        setUser(user);
         router.push('/dashboard');
 
         toast.success('Welcome back!');
@@ -53,7 +71,7 @@ export const AuthProvider = ({ children }) => {
         const user = userCredential.user;
         // ...
 
-        setUser({ email });
+        setUser(user);
         router.push('/dashboard');
 
         toast.success('Successfully signed up - welcome!');
@@ -70,8 +88,8 @@ export const AuthProvider = ({ children }) => {
 
     await auth.signOut();
 
-    router.push('/');
     setUser(null);
+    router.push('/');
   };
 
   return (
