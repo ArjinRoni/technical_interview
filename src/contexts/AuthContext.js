@@ -22,20 +22,18 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setLoading(true);
-
       if (user) {
         setUser(user);
       } else {
         setUser(null);
       }
 
-      setLoading(false);
+      setIsAuthLoading(false);
     });
 
     return () => unsubscribe();
@@ -93,6 +91,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, signup, logout, isAuthLoading }}>
+      {children}
+    </AuthContext.Provider>
   );
 };
