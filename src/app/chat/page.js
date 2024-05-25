@@ -1,3 +1,3 @@
 export default function Page() {
-    return <p>Chat Page</p>;
-  }
+  return <p>Chat Page</p>;
+}
