@@ -1,39 +1,44 @@
-import { Inter } from 'next/font/google';
+'use client';
+import React, { useEffect } from 'react';
+import Head from 'next/head';
+import { Toaster } from 'react-hot-toast';
+
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata = {
-  title: 'NewFrame AI App',
-  description: 'Welcome to the Future of Advertising',
-};
-
-// Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: 'AIzaSyBTque6-PHscsZ8C4gL6IRjBrXHa9SyssU',
-  authDomain: 'comfyui-410814.firebaseapp.com',
-  projectId: 'comfyui-410814',
-  storageBucket: 'comfyui-410814.appspot.com',
-  messagingSenderId: '706027464576',
-  appId: '1:706027464576:web:a45752495f474963d80365',
-  measurementId: 'G-LLZYVD5CE8',
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = app.name && typeof window !== 'undefined' ? getAnalytics(app) : null;
+import { FBProvider } from '@/contexts/FBContext';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { FontProvider } from '@/contexts/FontContext';
 
 export default function RootLayout({ children }) {
+  // Hook to set the title and meta description tags for the application
+  useEffect(() => {
+    document.title = 'NewFrame AI App';
+    const meta = document.createElement('meta');
+    meta.name = 'description';
+    meta.content = 'Welcome to the Future of Advertising';
+    document.head.appendChild(meta);
+
+    return () => {
+      document.head.removeChild(meta);
+    };
+  }, []);
+
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <Head>
+        <title>NewFrame AI App</title>
+        <meta name="description" content="Welcome to the Future of Advertising" />
+      </Head>
+      <body>
+        <FBProvider>
+          <AuthProvider>
+            <FontProvider>
+              <Toaster />
+              {children}
+            </FontProvider>
+          </AuthProvider>
+        </FBProvider>
+      </body>
     </html>
   );
 }
