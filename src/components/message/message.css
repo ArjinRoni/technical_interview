@@ -1,0 +1,9 @@
+.message {
+    display: flex;
+    padding: 12px 16px 12px 16px;
+    border-radius: 12px;
+}
+
+.message-text {
+    font-size: 16px;
+}

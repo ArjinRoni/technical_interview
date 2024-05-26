@@ -23,7 +23,7 @@ const Button = ({
           style={{ marginLeft: 12 }}
           width={30}
           height={30}
-          src={emoji === 'rocket' ? './rocket.png' : emoji === 'plus' ? './plus.png' : null}
+          src={emoji === 'rocket' ? '/rocket.png' : emoji === 'plus' ? '/plus.png' : null}
         />
       )}
     </button>

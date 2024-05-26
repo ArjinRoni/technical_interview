@@ -1,5 +1,5 @@
 'use client';
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { Inter, Hanken_Grotesk } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -9,6 +9,8 @@ export const FontContext = createContext({
   primaryFont: null,
   secondaryFont: null,
 });
+
+export const useFont = () => useContext(FontContext);
 
 export const FontProvider = ({ children }) => {
   return (

@@ -21,7 +21,7 @@ export const ChatsProvider = ({ children }) => {
       const chats_ = await getDocs(collection(db, 'chats', userId));
       setChats(chats_.map((x) => x?.data()));
     } catch (error) {
-      console.log('Got error fetching chats: ', chats);
+      console.log('Got error fetching chats: ', error);
     }
   };
 

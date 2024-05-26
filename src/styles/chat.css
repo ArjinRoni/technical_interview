@@ -1,0 +1,27 @@
+.chat-page {
+    display: flex;
+    height: 100vh;
+}
+
+.chat-panel {
+    display: flex;
+    flex: 1;
+    height: 100vh;
+    margin-left: 202px;
+    align-items: center;
+    align-content: center;
+    justify-items: center;
+    justify-content: center;
+}
+
+.messages-scrollview {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 16px;
+    height: 100vh;
+    padding-top: 48px;
+    padding-left: 32px;
+    padding-right: 32px;
+    overflow-y: scroll;
+}

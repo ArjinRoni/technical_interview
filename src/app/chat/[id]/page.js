@@ -1,20 +1,30 @@
 'use client';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import '../../../styles/chat.css';
+
+import { Sidebar, UserInput, Message } from '@/components';
 import { useMadison } from '@/contexts/MadisonContext';
 
-export default function Page({ params }) {
+const ChatPage = ({ params }) => {
   const { openai, currentRun } = useMadison();
 
   const { id } = params;
 
+  const [userMessage, setUserMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+
   useEffect(() => {
     const checkForMessages = async (run) => {
       if (run.status === 'completed') {
+        let messages_ = [];
+
         const messages = await openai.beta.threads.messages.list(run.thread_id);
         for (const message of messages.data.reverse()) {
-          console.log(`${message.role} > ${message.content[0].text.value}`);
+          messages_.push(message);
         }
+
+        setMessages(messages_);
       } else {
         console.log(run.status);
       }
@@ -23,15 +33,30 @@ export default function Page({ params }) {
     currentRun && checkForMessages(currentRun);
   }, [currentRun]);
 
-  /*
-          await setDoc(doc(db, 'chats', userId, chatId, messageId), {
-          text: 'Hello, how can I help you?',
-        }); */
+  const addUserMessage = async () => {
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setUserMessage(''); // Reset the user message
+  };
 
   return (
-    <div>
-      <p>Chat Page</p>
-      <p>Chat ID: {id}</p>
+    <div className="chat-page">
+      <Sidebar />
+      <div className="chat-panel">
+        {messages && messages.length > 0 && (
+          <div className="messages-scrollview">
+            {messages.map((message, index) => (
+              <Message key={index} message={message} />
+            ))}
+          </div>
+        )}
+        <UserInput
+          userMessage={userMessage}
+          setUserMessage={setUserMessage}
+          onSubmit={addUserMessage}
+        />
+      </div>
     </div>
   );
-}
+};
+
+export default ChatPage;

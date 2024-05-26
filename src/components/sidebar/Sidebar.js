@@ -45,10 +45,10 @@ const Sidebar = () => {
       />
       <div className="sidebar-chats">{chats.map((x) => x.id)}</div>
       <div className="sidebar-buttons">
-        <SidebarButton src="./settings.png" text="Settings" />
-        <SidebarButton src="./user.png" text="My account" />
-        <SidebarButton src="./email-plus.png" text="Send feedback" />
-        <SidebarButton src="./log-out.png" text="Log out" onClick={async () => await logout()} />
+        <SidebarButton src="/settings.png" text="Settings" />
+        <SidebarButton src="/user.png" text="My account" />
+        <SidebarButton src="/email-plus.png" text="Send feedback" />
+        <SidebarButton src="/log-out.png" text="Log out" onClick={async () => await logout()} />
       </div>
     </div>
   );
