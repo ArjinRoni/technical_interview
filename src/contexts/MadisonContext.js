@@ -21,8 +21,6 @@ export const MadisonProvider = ({ children }) => {
   const [assistant, setAssistant] = useState(null);
   const [currentRun, setCurrentRun] = useState(null);
 
-  console.log(assistant);
-
   // Create OpenAI client
   const openai = new OpenAI({
     default_headers: { 'OpenAI-Beta': 'assistants=v2' },

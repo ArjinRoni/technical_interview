@@ -33,11 +33,10 @@ export const ChatsProvider = ({ children }) => {
         const userId = user.userId;
 
         // Set chat ID as the next integer
-        const chatId = `chat${chats.length + 1}`;
-        console.log('Got chat');
+        const chatId = chats.length + 1;
 
         // Add a new user document in DB
-        await setDoc(doc(db, 'chats', userId, chatId, 'details'), { threadId });
+        await setDoc(doc(db, 'chats', userId, `chat${chatId}`, 'details'), { threadId });
 
         // Refresh chats
         await getAndSetChats(userId);

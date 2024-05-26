@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useMadison } from '@/contexts/MadisonContext';
 
 export default function Page({ params }) {
-  const { currentRun } = useMadison();
+  const { openai, currentRun } = useMadison();
 
   const { id } = params;
 
