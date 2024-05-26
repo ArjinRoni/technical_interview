@@ -41,7 +41,7 @@ const SignUp = () => {
     ]);
     if (hasError) return;
 
-    await signup({ email: email.trim(), password });
+    await signup({ name: name.trim(), email: email.trim(), password });
   };
 
   return (
