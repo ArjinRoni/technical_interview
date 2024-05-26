@@ -8,6 +8,7 @@ import './globals.css';
 
 import { FBProvider } from '@/contexts/FBContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { MadisonProvider } from '@/contexts/MadisonContext';
 import { ChatsProvider } from '@/contexts/ChatsContext';
 import { FontProvider } from '@/contexts/FontContext';
 
@@ -34,13 +35,15 @@ export default function RootLayout({ children }) {
       <body>
         <FBProvider>
           <AuthProvider>
-            <ChatsProvider>
-              <FontProvider>
-                <Toaster />
-                {children}
-                <Analytics />
-              </FontProvider>
-            </ChatsProvider>
+            <MadisonProvider>
+              <ChatsProvider>
+                <FontProvider>
+                  <Toaster />
+                  {children}
+                  <Analytics />
+                </FontProvider>
+              </ChatsProvider>
+            </MadisonProvider>
           </AuthProvider>
         </FBProvider>
       </body>
