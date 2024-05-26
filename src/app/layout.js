@@ -8,6 +8,7 @@ import './globals.css';
 
 import { FBProvider } from '@/contexts/FBContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ChatsProvider } from '@/contexts/ChatsContext';
 import { FontProvider } from '@/contexts/FontContext';
 
 export default function RootLayout({ children }) {
@@ -33,11 +34,13 @@ export default function RootLayout({ children }) {
       <body>
         <FBProvider>
           <AuthProvider>
-            <FontProvider>
-              <Toaster />
-              {children}
-              <Analytics />
-            </FontProvider>
+            <ChatsProvider>
+              <FontProvider>
+                <Toaster />
+                {children}
+                <Analytics />
+              </FontProvider>
+            </ChatsProvider>
           </AuthProvider>
         </FBProvider>
       </body>
