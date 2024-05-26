@@ -1,11 +1,15 @@
 'use client';
 import { createContext, useState, useEffect, useContext } from 'react';
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDocs, setDoc } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
 
 import { useFB } from './FBContext';
 import { useAuth } from './AuthContext';
 
-export const ChatsContext = createContext({ chats: [], createChat: async () => {} });
+export const ChatsContext = createContext({
+  chats: [],
+  createChat: async () => {},
+});
 
 export const useChats = () => useContext(ChatsContext);
 
@@ -18,10 +22,18 @@ export const ChatsProvider = ({ children }) => {
   // Function to get and set chats
   const getAndSetChats = async (userId) => {
     try {
-      const chats_ = await getDocs(collection(db, 'chats', userId));
-      setChats(chats_.map((x) => x?.data()));
+      const chatsRef = collection(db, 'chats');
+      const chatsQuery = query(chatsRef, where('userId', '==', userId));
+      const chatsSnapshot = await getDocs(chatsQuery);
+
+      const chats_ = [];
+      chatsSnapshot.forEach((doc) => {
+        chats_.push({ id: doc.id, ...doc.data() });
+      });
+
+      setChats(chats_);
     } catch (error) {
-      console.log('Got error fetching chats: ', error);
+      console.log('Got error fetching chats:', error);
     }
   };
 
@@ -32,17 +44,25 @@ export const ChatsProvider = ({ children }) => {
         // Get user ID
         const userId = user.userId;
 
-        // Set chat ID as the next integer
-        const chatId = chats.length + 1;
+        // Set chat number as the next integer and chat ID as random UUID v4
+        const chatNo = chats.length + 1;
+        const chatId = uuidv4();
 
-        // Add a new user document in DB
-        await setDoc(doc(db, 'chats', userId, `chat${chatId}`, 'details'), { threadId });
+        // Create the chat document
+        const chatData = {
+          title: `${user.name}'s Ad #${chatNo}`,
+          threadId,
+          userId,
+          chatNo,
+        };
+
+        await setDoc(doc(db, 'chats', chatId), chatData);
 
         // Refresh chats
         await getAndSetChats(userId);
 
-        // Return the chat ID to the caller
-        return chatId;
+        // Return the chat no to the caller
+        return chatNo;
       } catch (error) {
         console.log('Got error creating chat: ', error);
       }
