@@ -14,6 +14,8 @@ const ChatPage = ({ params }) => {
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
 
+  console.log('Got messages: ', messages);
+
   useEffect(() => {
     const checkForMessages = async (run) => {
       if (run.status === 'completed') {
@@ -24,7 +26,7 @@ const ChatPage = ({ params }) => {
           messages_.push(message);
         }
 
-        setMessages(messages_);
+        //setMessages(messages_);
       } else {
         console.log(run.status);
       }
