@@ -1,0 +1,9 @@
+.user-input-form {
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    align-self: center;
+    width: 500px;
+}
+
+.user-input {}
