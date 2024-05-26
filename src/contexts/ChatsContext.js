@@ -5,13 +5,14 @@ import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
 import { useFB } from './FBContext';
 import { useAuth } from './AuthContext';
 
-export const ChatsContext = createContext({ chats: [] });
+export const ChatsContext = createContext({ chats: [], createChat: async () => {} });
 
 export const useChats = () => useContext(ChatsContext);
 
 export const ChatsProvider = ({ children }) => {
   const { db } = useFB();
   const { user } = useAuth();
+
   const [chats, setChats] = useState([]);
 
   // Function to get and set chats
@@ -25,7 +26,7 @@ export const ChatsProvider = ({ children }) => {
   };
 
   // Function to create a chat
-  const createChat = async (message) => {
+  const createChat = async (threadId) => {
     if (user && user.userId) {
       try {
         // Get user ID
@@ -33,12 +34,16 @@ export const ChatsProvider = ({ children }) => {
 
         // Set chat ID as the next integer
         const chatId = `chat${chats.length + 1}`;
-
-        // Set message ID as first (1)
-        const messageId = 'message1';
+        console.log('Got chat');
 
         // Add a new user document in DB
-        await setDoc(doc(db, 'chats', userId, chatId, messageId), { text: message });
+        await setDoc(doc(db, 'chats', userId, chatId, 'details'), { threadId });
+
+        // Refresh chats
+        await getAndSetChats(userId);
+
+        // Return the chat ID to the caller
+        return chatId;
       } catch (error) {
         console.log('Got error creating chat: ', error);
       }
