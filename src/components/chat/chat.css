@@ -1,0 +1,15 @@
+.chat {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 12px 12px 20px;
+}
+
+.chat-selected {
+    background-color: #3b3b3b;
+}
+
+.chat-title {
+    font-size: 14px;
+}
