@@ -7,3 +7,4 @@ export { default as Message } from './message/Message';
 export { default as Progress } from './progress/Progress';
 export { default as SmallButton } from './small_button/SmallButton';
 export { default as UserInput } from './user_input/UserInput';
+export { default as Chat } from './chat/Chat';
