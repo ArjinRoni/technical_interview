@@ -3,3 +3,7 @@ export { default as Form } from './form/Form';
 export { default as Input } from './input/Input';
 export { default as Redirector } from './redirector/Redirector';
 export { default as Sidebar } from './sidebar/Sidebar';
+export { default as Message } from './message/Message';
+export { default as Progress } from './progress/Progress';
+export { default as SmallButton } from './small_button/SmallButton';
+export { default as UserInput } from './user_input/UserInput';
