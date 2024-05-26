@@ -1,0 +1,14 @@
+{
+  "name": "trigger_training",
+  "description": "Trigger the training process with provided classification token.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "classification_token": {
+        "type": "string",
+        "description": "Token for classifying the object of advertisement"
+      }
+    },
+    "required": ["classification_token"]
+  }
+}

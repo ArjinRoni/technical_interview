@@ -1,0 +1,17 @@
+{
+  "name": "trigger_inference",
+  "description": "Trigger the inference process with provided image prompts.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "image_prompts": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "The prompts that user confirmed to be sent to inference for image generation"
+      }
+    },
+    "required": ["image_prompts"]
+  }
+}
