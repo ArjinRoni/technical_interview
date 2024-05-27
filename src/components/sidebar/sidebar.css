@@ -4,7 +4,6 @@
     flex-direction: column;
     flex: 1;
     height: 100%;
-    width: 216px;
     border-right: 0.5px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -13,7 +12,7 @@
     flex-direction: column;
     flex: 1;
     width: 216px;
-    gap: 24px;
+    gap: 8px;
     margin-top: 32px;
     justify-items: center;
 }
@@ -42,4 +41,15 @@
 
 .sidebar-button-text {
     font-size: 14px;
+}
+
+.sidebar-open-button {
+    position: absolute;
+    right: 0;
+    justify-self: center;
+    align-self: center;
+    top: 45%;
+    cursor: pointer;
+    background-color: #3b3b3b;
+    padding: 10px 3px 10px 6px;
 }
