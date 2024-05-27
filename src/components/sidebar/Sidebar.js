@@ -11,10 +11,11 @@ import { useMadison } from '@/contexts/MadisonContext';
 import { useUI } from '@/contexts/UIContext';
 
 import './sidebar.css';
+import Spinner from '../spinner/Spinner';
 
 const Sidebar = () => {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { chats, createChat } = useChats();
   const { createThread, createRun } = useMadison();
   const { isSidebarOpen, setIsSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
@@ -56,9 +57,20 @@ const Sidebar = () => {
             onClick={createNewChatAndNavigate}
           />
           <div className="sidebar-chats">
-            {chats.map((chat) => (
-              <Chat key={chat.chatNo} chat={chat} />
-            ))}
+            {chats && chats.length > 0 ? (
+              chats.map((chat) => <Chat key={chat.chatNo} chat={chat} />)
+            ) : (
+              <div className="sidebar-chats-empty-state">
+                {user && user.userId && chats ? (
+                  <>
+                    <img style={{ width: 48, height: 48 }} src="/double-chat-bubble.png" />
+                    <p>You don't have any ads yet. Why not create a new one now?</p>{' '}
+                  </>
+                ) : (
+                  <Spinner marginTop={64} isBlack={true} />
+                )}
+              </div>
+            )}
           </div>
           <div className="sidebar-buttons">
             <SidebarButton src="/settings.png" text="Settings" />

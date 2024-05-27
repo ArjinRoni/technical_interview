@@ -53,3 +53,17 @@
     background-color: #3b3b3b;
     padding: 10px 3px 10px 6px;
 }
+
+.sidebar-chats-empty-state {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    text-align: center;
+    position: absolute;
+    opacity: 0.5;
+    top: 40%;
+    width: 80%;
+    margin-right: 24px;
+    align-self: center;
+}
