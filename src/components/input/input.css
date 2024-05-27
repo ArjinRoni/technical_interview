@@ -1,4 +1,9 @@
+.input-container {
+    position: relative;
+}
+
 .input {
+    position: relative;
     background-color: white;
     color: #222222;
     border: double 2px transparent;
@@ -10,4 +15,15 @@
     font-size: 16px;
     padding: 12px;
     outline: none;
+    width: 100%;
+}
+
+.input-visibility-toggler {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    opacity: 0.7;
 }
