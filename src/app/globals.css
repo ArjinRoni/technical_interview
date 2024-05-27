@@ -34,7 +34,9 @@
   --card-border-rgb: 131, 134, 135;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (max-width: 4000px) {
+
+  /* This was previously (prefers-color-scheme: dark) but that caused problems for now... In future re-incorporate to respect people's preferences. */
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 28, 28, 28;
@@ -87,7 +89,9 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (max-width: 4000px) {
+
+  /* This was previously (prefers-color-scheme: dark) but that caused problems for now... In future re-incorporate to respect people's preferences. */
   html {
     color-scheme: dark;
   }
