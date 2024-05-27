@@ -10,3 +10,5 @@ export { default as UserInput } from './user_input/UserInput';
 export { default as Chat } from './chat/Chat';
 export { default as Spinner } from './spinner/Spinner';
 export { default as Modal } from './modal/Modal';
+export { default as Steps } from './steps/Steps';
+export { default as Glow } from './glow/Glow';
