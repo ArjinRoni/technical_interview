@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+import './image_upload.css';
+
 import { useFB } from '@/contexts/FBContext';
 
 const ImageUpload = ({ onUpload }) => {

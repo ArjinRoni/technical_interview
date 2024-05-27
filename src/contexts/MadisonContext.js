@@ -48,7 +48,6 @@ export const MadisonProvider = ({ children }) => {
     return thread.id;
   };
 
-    
   // Function to add user message to the thread
   const addUserMessageToThread = async ({ message, threadId, onTrainingComplete }) => {
     await openai.beta.threads.messages.create(threadId, {
@@ -65,7 +64,9 @@ export const MadisonProvider = ({ children }) => {
         additional_instructions: `Respond to user's message`,
       });
     }
-    setCurrentRun(run)
+
+    setCurrentRun(run);
+
     // Check if the run requires an action
     if (run.status === 'requires_action') {
       const requiredAction = run.required_action;
@@ -80,18 +81,20 @@ export const MadisonProvider = ({ children }) => {
 
             if (functionName === 'trigger_training') {
               const classificationToken = functionArgs.classification_token;
-              console.log(`Triggering training API with classification token: ${classificationToken}`);
-            
+              console.log(
+                `Triggering training API with classification token: ${classificationToken}`,
+              );
+
               // Call the onTrainingComplete callback to initiate the training process
               const trainingSuccess = await onTrainingComplete(classificationToken);
-              console.log(`trainingSuccess:  ${trainingSuccess}`)
+              console.log(`trainingSuccess:  ${trainingSuccess}`);
               if (trainingSuccess) {
                 // Training completed successfully
                 const trainingResponse = {
                   status: 'success',
                   message: `Images uploaded successfully for classification token: ${classificationToken}. Training has been completed.`,
                 };
-              
+
                 toolOutputs.push({
                   tool_call_id: toolCall.id,
                   output: JSON.stringify(trainingResponse),
@@ -102,7 +105,7 @@ export const MadisonProvider = ({ children }) => {
                   status: 'error',
                   message: `Training failed for classification token: ${classificationToken}.`,
                 };
-              
+
                 toolOutputs.push({
                   tool_call_id: toolCall.id,
                   output: JSON.stringify(trainingResponse),
@@ -111,7 +114,7 @@ export const MadisonProvider = ({ children }) => {
             } else if (functionName === 'trigger_inference') {
               const imagePrompts = functionArgs.image_prompts;
               console.log(`Triggering inference with image prompts: ${imagePrompts}`);
-            
+
               // TODO: Implement the inference API call here
               // For now, let's simulate a successful inference response
               const inferenceResponse = {
@@ -124,7 +127,7 @@ export const MadisonProvider = ({ children }) => {
                   'https://example.com/image4.jpg',
                 ],
               };
-            
+
               toolOutputs.push({
                 tool_call_id: toolCall.id,
                 output: JSON.stringify(inferenceResponse),
