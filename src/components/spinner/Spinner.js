@@ -1,6 +1,6 @@
 import './spinner.css';
 
-const Spinner = ({ size = 32, marginTop = 20, isGray = false }) => {
+const Spinner = ({ size = 32, marginTop = 20, isGray = false, isBlack = false }) => {
   return (
     <div
       style={{
@@ -8,7 +8,7 @@ const Spinner = ({ size = 32, marginTop = 20, isGray = false }) => {
         height: size,
         marginTop,
       }}
-      className={isGray ? 'spinner-gray' : 'spinner-white'}
+      className={isGray ? 'spinner-gray' : isBlack ? 'spinner-black' : 'spinner-white'}
     />
   );
 };
