@@ -8,6 +8,8 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
+
+//TODO: put to .env 
 const firebaseConfig = {
   apiKey: 'AIzaSyBTque6-PHscsZ8C4gL6IRjBrXHa9SyssU',
   authDomain: 'comfyui-410814.firebaseapp.com',
