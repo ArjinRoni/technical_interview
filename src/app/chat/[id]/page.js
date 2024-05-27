@@ -1,15 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-
+import { toast } from 'react-hot-toast';
 import '../../../styles/chat.css';
 
 import { Sidebar, UserInput, Message } from '@/components';
+
 import { useMadison } from '@/contexts/MadisonContext';
+import { useUI } from '@/contexts/UIContext';
 
 const ChatPage = ({ params }) => {
+  const { isSidebarOpen } = useUI();
   const { openai, currentRun } = useMadison();
 
-  const { id } = params;
+  const { id } = params; // TODO: Need to use this somewhere
 
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -23,10 +26,10 @@ const ChatPage = ({ params }) => {
 
         const messages = await openai.beta.threads.messages.list(run.thread_id);
         for (const message of messages.data.reverse()) {
-          messages_.push(message);
+          messages_.push({ role: message.role, text: message.content[0].text.value });
         }
 
-        //setMessages(messages_);
+        setMessages(messages_);
       } else {
         console.log(run.status);
       }
@@ -36,18 +39,22 @@ const ChatPage = ({ params }) => {
   }, [currentRun]);
 
   const addUserMessage = async () => {
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    if (!userMessage || userMessage.length === 0) {
+      toast.error('Please type your message.');
+      return;
+    }
+    setMessages((prevMessages) => [...prevMessages, { role: 'user', text: userMessage }]);
     setUserMessage(''); // Reset the user message
   };
 
   return (
     <div className="chat-page">
       <Sidebar />
-      <div className="chat-panel">
+      <div className="chat-panel" style={{ marginLeft: isSidebarOpen ? 216 : 0 }}>
         {messages && messages.length > 0 && (
           <div className="messages-scrollview">
             {messages.map((message, index) => (
-              <Message key={index} message={message} />
+              <Message key={index} isAI={message.role === 'assistant'} text={message.text} />
             ))}
           </div>
         )}

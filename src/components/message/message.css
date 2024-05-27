@@ -1,9 +1,37 @@
+.message-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
 .message {
     display: flex;
-    padding: 12px 16px 12px 16px;
+    padding: 14px 20px 16px 20px;
     border-radius: 12px;
+    line-height: 150%;
+    max-width: 80vh;
 }
 
 .message-text {
     font-size: 16px;
+}
+
+.initials-box {
+    display: flex;
+    background: linear-gradient(to right, #7063c5, #1e1361);
+    padding: 12px;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+    justify-content: center;
+    border-radius: 300px;
+}
+
+.initials-text {
+    display: flex;
+    align-self: center;
+    text-align: center;
 }
