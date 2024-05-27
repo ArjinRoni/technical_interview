@@ -1,0 +1,47 @@
+.dashboard-page {
+    display: flex;
+    height: 100vh;
+}
+
+.dashboard-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100vh;
+    align-items: center;
+    margin-top: 64px;
+}
+
+.info-boxes {
+    display: flex;
+    gap: 24px;
+}
+
+.info-box {
+    display: flex;
+    width: 170px;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    border-radius: 16px;
+    background-color: #3b3b3b;
+    padding: 12px 24px 24px 24px;
+}
+
+.info-box-value {
+    font-size: 40px;
+}
+
+.greeting {
+    font-size: 42px;
+    margin-bottom: 32px;
+}
+
+.dashboard-logo {
+    width: 128px;
+    height: 128px;
+    border-radius: 300px;
+    margin-bottom: 32px;
+    background-color: white;
+    padding: 16px;
+}
