@@ -19,6 +19,7 @@ export const useMadison = () => useContext(MadisonContext);
 export const MadisonProvider = ({ children }) => {
   const { user } = useAuth();
 
+  // TODO: Can create a helper assistant to set custom / unique titles for each ad.
   const [assistant, setAssistant] = useState(null);
   const [currentRun, setCurrentRun] = useState(null);
 
