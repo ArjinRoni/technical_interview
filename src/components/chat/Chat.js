@@ -13,7 +13,7 @@ const Chat = ({ chat }) => {
     <Link href={`/chat/${chat.chatNo}`}>
       <div className={`chat ${isActive ? 'chat-selected' : ''}`}>
         <img style={{ width: 24, height: 24 }} src="/double-chat-bubble.png" />
-        <p className="chat-title">{chat.title}</p>
+        <p className="chat-title-small">{chat.title}</p>
       </div>
     </Link>
   );
