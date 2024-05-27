@@ -15,3 +15,4 @@ export { default as Glow } from './glow/Glow';
 export { default as MultilineInput } from './multiline_input/MultilineInput';
 export { default as User } from './user/User';
 export { default as Setting } from './setting/Setting';
+export { default as ImageUpload } from './image_upload/ImageUpload';

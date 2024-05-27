@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import '../../../styles/chat.css';
 
-import { Sidebar, Glow, UserInput, Message } from '@/components';
+import { Sidebar, Glow, UserInput, Message, ImageUpload } from '@/components';
 
 import { useChats } from '@/contexts/ChatsContext';
 import { useMadison } from '@/contexts/MadisonContext';
@@ -37,6 +37,30 @@ const ChatPage = ({ params }) => {
     }
   }, [chats, id]);
 
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [showImageUploadForm, setShowImageUploadForm] = useState(false);
+  const [classificationToken, setClassificationToken] = useState(null);
+
+  const handleImageUpload = async (urls) => {
+    setUploadedImages((prevImages) => [...prevImages, ...urls]);
+    setShowImageUploadForm(false);
+
+    // Perform the actual training process
+    const trainingSuccess = await handleTraining(classificationToken, urls);
+
+    // Resolve the promise with the training success status
+    trainingCompleteCallback(trainingSuccess);
+
+    if (trainingSuccess) {
+      // Send a follow-up message or action to proceed with the conversation
+      addUserMessage(
+        'Training completed successfully. Please provide more details about the target audience and visual style.',
+      );
+    } else {
+      // Handle the case when training fails
+      addUserMessage('Training failed. Please try uploading the images again.');
+    }
+  };
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
 
@@ -71,6 +95,28 @@ const ChatPage = ({ params }) => {
             createMessage({ message, chatId: currentChat.id });
           }
         }
+      }
+
+      if (currentRun?.status === 'requires_action') {
+        const requiredAction = currentRun.required_action;
+        if (requiredAction.type === 'submit_tool_outputs') {
+          const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
+          for (const toolCall of toolCalls) {
+            if (toolCall.function && toolCall.function.name === 'trigger_training') {
+              const classificationToken = JSON.parse(
+                toolCall.function.arguments,
+              ).classification_token;
+              console.log(`Classification token: ${classificationToken}`);
+              setClassificationToken(classificationToken);
+              setShowImageUploadForm(true);
+              break; // Exit the loop after finding the trigger_training function
+            } else if (toolCall.function && toolCall.function.name === 'trigger_inference') {
+              const imagePrompts = JSON.parse(toolCall.function.arguments).image_prompts;
+              console.log(`Image prompts: ${imagePrompts}`);
+              await handleInference(imagePrompts);
+            }
+          }
+        }
       } else {
         console.log('Got run status: ', run.status);
       }
@@ -78,6 +124,12 @@ const ChatPage = ({ params }) => {
 
     currentChat && currentRun && checkForMessages(currentRun);
   }, [currentChat, currentRun]);
+
+  const [trainingCompleteCallback, setTrainingCompleteCallback] = useState(null);
+
+  const handleTrainingComplete = (resolve) => {
+    setTrainingCompleteCallback(() => resolve);
+  };
 
   // Function to add a message to the chat from the user
   const addUserMessage = async () => {
@@ -97,7 +149,11 @@ const ChatPage = ({ params }) => {
         { role: 'assistant', isLoading: true }, // NOTE: We also pass an `isLoading` state here to indicate to the user loading
       ]);
       createMessage({ message, chatId: currentChat.id });
-      addUserMessageToThread({ threadId: currentChat.threadId, message: message.text });
+      addUserMessageToThread({
+        threadId: currentChat.threadId,
+        message: message.text,
+        onTrainingComplete: handleTrainingComplete,
+      });
     }
 
     // Reset the user message
@@ -113,6 +169,55 @@ const ChatPage = ({ params }) => {
     router.push('/dashboard');
 
     setIsLoading(false);
+  };
+
+  const handleTraining = async (classificationToken, imageUrls) => {
+    try {
+      // TODO: Implement the API call to trigger training with the classification token and image URLs
+      /*       const response = await fetch('/api/training', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ classificationToken, imageUrls }),
+      }); */
+      const response = { status: 200 };
+      if (response.ok) {
+        // Training initiated successfully
+        console.log('Training initiated');
+        setShowImageUploadForm(false);
+        setClassificationToken(null);
+      } else {
+        // Handle error case
+        console.error('Failed to initiate training');
+      }
+    } catch (error) {
+      console.error('Error triggering training:', error);
+    }
+  };
+
+  const handleInference = async (imagePrompts) => {
+    try {
+      // TODO: Implement the API call to trigger inference with the image prompts
+      /*       const response = await fetch('/api/inference', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imagePrompts }),
+      }); */
+      const response = { status: 200 };
+      if (response.ok) {
+        // Inference completed successfully
+        console.log('Inference completed');
+        // TODO: Handle the generated images or output from the inference API
+      } else {
+        // Handle error case
+        console.error('Failed to complete inference');
+      }
+    } catch (error) {
+      console.error('Error triggering inference:', error);
+    }
   };
 
   return (
@@ -135,6 +240,12 @@ const ChatPage = ({ params }) => {
               src="/delete.png"
               onClick={deleteChatAndNavigateBack}
             />
+          </div>
+        )}
+        {showImageUploadForm && (
+          <div className="image-upload-form">
+            <h3>Upload Images</h3>
+            <ImageUpload onUpload={handleImageUpload} />
           </div>
         )}
         {messages && messages.length > 0 && (
