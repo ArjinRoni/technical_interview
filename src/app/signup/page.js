@@ -14,6 +14,7 @@ const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [accessCode, setAccessCode] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,6 +38,10 @@ const SignUp = () => {
       {
         condition: !confirmPassword || password !== confirmPassword,
         message: 'Confirm password does not match.',
+      },
+      {
+        condition: !accessCode || accessCode.length === 0 || accessCode !== process.env.ACCESS_CODE,
+        message: 'Please enter a valid access code.',
       },
     ]);
     if (hasError) return;
@@ -64,6 +69,7 @@ const SignUp = () => {
           value={confirmPassword}
           setValue={setConfirmPassword}
         />
+        <Input type="text" placeholder="Access code" value={accessCode} setValue={setAccessCode} />
         <Redirector text="Already have an account? Log in instead" href="/login" />
         <Button type="submit" text="Sign up" />
       </Form>
