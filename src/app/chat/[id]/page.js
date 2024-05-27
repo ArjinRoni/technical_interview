@@ -45,14 +45,6 @@ const ChatPage = ({ params }) => {
     setUploadedImages((prevImages) => [...prevImages, ...urls]);
     setShowImageUploadForm(false);
 
-    // Perform the actual training process
-    /*
-    const trainingSuccess = await handleTraining(classificationToken, urls);
-
-    // Resolve the promise with the training success status
-    trainingCompleteCallback(trainingSuccess);
-    */
-
     const trainingSuccess = await new Promise((resolve) => {
       handleTraining(classificationToken, urls)
         .then((success) => {
