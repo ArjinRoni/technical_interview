@@ -49,14 +49,15 @@ export const MadisonProvider = ({ children }) => {
   };
 
     
+  // Function to add user message to the thread
   const addUserMessageToThread = async ({ message, threadId, onTrainingComplete }) => {
     await openai.beta.threads.messages.create(threadId, {
       role: 'user',
       content: message,
     });
-  
+
     let run = currentRun; // Use the existing run if available
-  
+
     if (!run || run.status === 'completed') {
       // Create a new run only if there is no active run or the previous run is completed
       run = await openai.beta.threads.runs.createAndPoll(threadId, {
@@ -64,26 +65,26 @@ export const MadisonProvider = ({ children }) => {
         additional_instructions: `Respond to user's message`,
       });
     }
-  
+    setCurrentRun(run)
     // Check if the run requires an action
     if (run.status === 'requires_action') {
       const requiredAction = run.required_action;
       if (requiredAction.type === 'submit_tool_outputs') {
         const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
         const toolOutputs = [];
-  
+
         for (const toolCall of toolCalls) {
           if (toolCall.type === 'function') {
             const functionName = toolCall.function.name;
             const functionArgs = JSON.parse(toolCall.function.arguments);
-  
+
             if (functionName === 'trigger_training') {
               const classificationToken = functionArgs.classification_token;
               console.log(`Triggering training API with classification token: ${classificationToken}`);
             
               // Call the onTrainingComplete callback to initiate the training process
               const trainingSuccess = await onTrainingComplete(classificationToken);
-  
+              console.log(`trainingSuccess:  ${trainingSuccess}`)
               if (trainingSuccess) {
                 // Training completed successfully
                 const trainingResponse = {

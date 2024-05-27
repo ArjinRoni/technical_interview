@@ -46,10 +46,26 @@ const ChatPage = ({ params }) => {
     setShowImageUploadForm(false);
 
     // Perform the actual training process
+    /*
     const trainingSuccess = await handleTraining(classificationToken, urls);
 
     // Resolve the promise with the training success status
     trainingCompleteCallback(trainingSuccess);
+    */
+
+    const trainingSuccess = await new Promise((resolve) => {
+      handleTraining(classificationToken, urls)
+        .then((success) => {
+          resolve(success);
+        })
+        .catch((error) => {
+          console.error('Error during training:', error);
+          resolve(false);
+        });
+    });
+
+    // Call the trainingCompleteCallback with the training success status
+    setTrainingCompleteCallback(trainingSuccess);
 
     if (trainingSuccess) {
       // Send a follow-up message or action to proceed with the conversation
@@ -61,6 +77,7 @@ const ChatPage = ({ params }) => {
       addUserMessage('Training failed. Please try uploading the images again.');
     }
   };
+
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
 
@@ -95,10 +112,8 @@ const ChatPage = ({ params }) => {
             createMessage({ message, chatId: currentChat.id });
           }
         }
-      }
-
-      if (currentRun?.status === 'requires_action') {
-        const requiredAction = currentRun.required_action;
+      } else if (run.status === 'requires_action') {
+        const requiredAction = run.required_action;
         if (requiredAction.type === 'submit_tool_outputs') {
           const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
           for (const toolCall of toolCalls) {
@@ -127,8 +142,10 @@ const ChatPage = ({ params }) => {
 
   const [trainingCompleteCallback, setTrainingCompleteCallback] = useState(null);
 
-  const handleTrainingComplete = (resolve) => {
-    setTrainingCompleteCallback(() => resolve);
+  const handleTrainingComplete = () => {
+    return new Promise((resolve) => {
+      setTrainingCompleteCallback(() => resolve);
+    });
   };
 
   // Function to add a message to the chat from the user
