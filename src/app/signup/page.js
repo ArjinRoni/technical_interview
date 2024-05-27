@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 import '../../styles/page.css';
 
-import { Form, Input, Redirector, Button } from '@/components';
+import { Glow, Form, Input, Redirector, Button } from '@/components';
 import { checkError } from '@/utils/ErrorHandler';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -46,6 +46,7 @@ const SignUp = () => {
 
   return (
     <div className="page">
+      <Glow />
       <Form title="Join the future of advertising now 🚀" onSubmit={handleSubmit}>
         <Input type="text" placeholder="Name" autocomplete="name" value={name} setValue={setName} />
         <Input

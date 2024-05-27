@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 import '../../styles/page.css';
 
-import { Form, Input, Redirector, Button } from '@/components';
+import { Glow, Form, Input, Redirector, Button } from '@/components';
 import { checkError } from '@/utils/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -36,6 +36,7 @@ const Login = () => {
 
   return (
     <div className="page">
+      <Glow />
       <Form title="Welcome back 👋" onSubmit={handleSubmit}>
         <Input
           type="email"
