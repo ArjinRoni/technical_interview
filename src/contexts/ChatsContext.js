@@ -23,6 +23,7 @@ export const ChatsContext = createContext({
   deleteChat: async () => {},
   createMessage: async () => {},
   getMessages: async () => {},
+  getAllUserMessages: async () => {},
   updateMessageRating: async () => {},
 });
 
@@ -32,7 +33,7 @@ export const ChatsProvider = ({ children }) => {
   const { db } = useFB();
   const { user } = useAuth();
 
-  const [chats, setChats] = useState([]);
+  const [chats, setChats] = useState(null);
 
   // Function to get and set chats
   const getAndSetChats = async (userId) => {
@@ -200,6 +201,55 @@ export const ChatsProvider = ({ children }) => {
     }
   };
 
+  // Function to retrieve all messages sent by the user across all chats
+  const getAllUserMessages = async () => {
+    if (user && user.userId) {
+      try {
+        const userMessages = [];
+
+        // Get all chats for the user
+        const chatsRef = collection(db, 'chats');
+        const chatsQuery = query(chatsRef, where('userId', '==', user.userId));
+        const chatsSnapshot = await getDocs(chatsQuery);
+
+        // Iterate over each chat
+        for (const chatDoc of chatsSnapshot.docs) {
+          const chatId = chatDoc.id;
+
+          // Create a reference to the messages subcollection within the chat document
+          const messagesRef = collection(db, 'chats', chatId, 'messages');
+
+          // Create a query to retrieve messages sent by the user ordered by createdAt field
+          const messagesQuery = query(
+            messagesRef,
+            where('role', '==', 'user'),
+            orderBy('createdAt', 'asc'),
+          );
+
+          // Execute the query and get the snapshot of the messages
+          const messagesSnapshot = await getDocs(messagesQuery);
+
+          // Extract the message data from the snapshot
+          const messages = messagesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          // Add the messages to the userMessages array
+          userMessages.push(...messages);
+        }
+
+        return userMessages;
+      } catch (error) {
+        console.log('Got error retrieving user messages: ', error);
+        return [];
+      }
+    } else {
+      console.log('Cannot retrieve user messages without user credentials');
+      return [];
+    }
+  };
+
   // Hook to retrieve and set chats for the user
   useEffect(() => {
     if (user && user.userId) {
@@ -216,6 +266,7 @@ export const ChatsProvider = ({ children }) => {
         deleteChat,
         createMessage,
         getMessages,
+        getAllUserMessages,
         updateMessageRating,
       }}
     >
