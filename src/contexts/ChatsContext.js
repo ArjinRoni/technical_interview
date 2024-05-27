@@ -31,7 +31,7 @@ export const ChatsProvider = ({ children }) => {
         chats_.push({ id: doc.id, ...doc.data() });
       });
 
-      setChats(chats_);
+      setChats([...chats_.sort((a, b) => a.chatNo - b.chatNo)]);
     } catch (error) {
       console.log('Got error fetching chats:', error);
     }
