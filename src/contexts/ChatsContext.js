@@ -66,7 +66,7 @@ export const ChatsProvider = ({ children }) => {
 
         // Create the chat document
         const chatData = {
-          title: `${user.name}'s Ad #${chatNo}`,
+          title: `${user?.name?.split(' ')[0].trim()}'s Ad #${chatNo}`,
           threadId,
           userId,
           chatNo,

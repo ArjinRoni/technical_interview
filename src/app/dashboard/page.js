@@ -59,7 +59,7 @@ const Dashboard = () => {
       <div className="dashboard-panel" style={{ marginLeft: isSidebarOpen ? 216 : 0 }}>
         <img className="dashboard-logo" src="/logo.png" />
         <p style={{ fontFamily: primaryFont.style.fontFamily }} className="greeting">
-          {getGreeting()}, {user?.name?.split(' ')[0]}
+          {getGreeting()}, {user?.name?.split(' ')[0].trim()}
         </p>
         <div className="info-boxes">
           <InfoBox title="Ads created" value={chats?.length} />
