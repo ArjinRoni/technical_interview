@@ -5,12 +5,25 @@
 
 .chat-panel {
     display: flex;
+    flex-direction: column;
     flex: 1;
     height: 100vh;
     align-items: center;
     align-content: center;
     justify-items: center;
     justify-content: center;
+    margin-top: 36px;
+}
+
+.chat-header {
+    display: flex;
+    width: 100%;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+    gap: 36px;
 }
 
 .messages-scrollview {
@@ -22,5 +35,25 @@
     padding-top: 48px;
     padding-left: 32px;
     padding-right: 32px;
+    padding-bottom: 200px;
     overflow-y: scroll;
+}
+
+.chat-title-large {
+    align-self: center;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 24px;
+    animation: typing 3s steps(30, end);
+}
+
+@keyframes typing {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 100%;
+    }
 }
