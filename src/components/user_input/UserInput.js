@@ -9,22 +9,35 @@ const UserInput = ({ userMessage, setUserMessage, onSubmit }) => {
 
   const textareaRef = useRef(null);
 
+  // Hook to dynamically adjust the height of the text area
   useEffect(() => {
     textareaRef.current.style.height = '0px';
     const scrollHeight = textareaRef.current.scrollHeight;
     textareaRef.current.style.height = scrollHeight + 'px';
   }, [userMessage]);
 
+  // Function to submit the form when enter is pressed
+  const onEnterPress = (e) => {
+    if (e.keyCode == 13 && e.shiftKey == false) {
+      e.preventDefault();
+      onSubmit();
+    }
+  };
+
   return (
     <form className="user-input-form" onSubmit={onSubmit}>
       <textarea
         ref={textareaRef}
+        placeholder="Reply to Madison..."
         style={{ fontFamily: secondaryFont.style.fontFamily }}
         className="user-input"
         value={userMessage}
         onChange={(e) => setUserMessage(e.target.value)}
+        onKeyDown={(e) => onEnterPress(e)}
       />
-      <img className="send-image" src="/send.png" onClick={onSubmit} />
+      {userMessage && userMessage.length > 0 && (
+        <img className="send-image" src="/send-gradient.png" onClick={onSubmit} />
+      )}
     </form>
   );
 };
