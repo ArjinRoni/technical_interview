@@ -28,7 +28,9 @@ const ChatPage = ({ params }) => {
   // Hook to set the current chat
   useEffect(() => {
     try {
-      setCurrentChat(chats.find((chat) => chat.chatNo === parseInt(id)));
+      chats &&
+        chats.length > 0 &&
+        setCurrentChat(chats.find((chat) => chat.chatNo === parseInt(id)));
     } catch (error) {
       toast.error(`Ooops! We couldn't retrive your chat at this moment. Please try again later.`);
       console.log('Got error fetching the chat: ', error);

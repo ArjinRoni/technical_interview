@@ -12,3 +12,6 @@ export { default as Spinner } from './spinner/Spinner';
 export { default as Modal } from './modal/Modal';
 export { default as Steps } from './steps/Steps';
 export { default as Glow } from './glow/Glow';
+export { default as MultilineInput } from './multiline_input/MultilineInput';
+export { default as User } from './user/User';
+export { default as Setting } from './setting/Setting';

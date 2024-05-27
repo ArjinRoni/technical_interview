@@ -17,7 +17,7 @@ const Button = ({
       type={type}
       onClick={onClick ? onClick : null}
     >
-      <p style={{ fontSize }}>{text}</p>
+      <p style={{ fontSize, color: 'white', alignSelf: 'center', margin: 0 }}>{text}</p>
       {emoji && (
         <img
           style={{ marginLeft: 12 }}

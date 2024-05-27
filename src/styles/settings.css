@@ -1,0 +1,20 @@
+.settings-page {
+    display: flex;
+    height: 100vh;
+}
+
+.settings-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100vh;
+    align-items: center;
+    margin-top: 36px;
+    padding-left: 48px;
+}
+
+.settings-panel h1 {
+    font-size: 32px;
+    font-weight: 400;
+    align-self: flex-start;
+}

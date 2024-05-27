@@ -18,7 +18,8 @@ const Sidebar = () => {
   const { user, logout } = useAuth();
   const { chats, createChat } = useChats();
   const { createThread, createRun } = useMadison();
-  const { isSidebarOpen, setIsSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
+  const { isSidebarOpen, setIsSidebarOpen, setIsLoading, setLoadingMessage, setShowFeedbackForm } =
+    useUI();
 
   // Function to create a new chat and navigate to the correct chat path
   const createNewChatAndNavigate = async () => {
@@ -73,9 +74,26 @@ const Sidebar = () => {
             )}
           </div>
           <div className="sidebar-buttons">
-            <SidebarButton src="/settings.png" text="Settings" />
-            <SidebarButton src="/user.png" text="My account" />
-            <SidebarButton src="/email-plus.png" text="Send feedback" />
+            <SidebarButton
+              src="/home.png"
+              text="Dashboard"
+              onClick={() => router.push('/dashboard')}
+            />
+            <SidebarButton
+              src="/settings.png"
+              text="Settings"
+              onClick={() => router.push('/settings')}
+            />
+            <SidebarButton
+              src="/user.png"
+              text="My account"
+              onClick={() => router.push('/account')}
+            />
+            <SidebarButton
+              src="/email-plus.png"
+              text="Send feedback"
+              onClick={() => setShowFeedbackForm(true)}
+            />
             <SidebarButton src="/log-out.png" text="Log out" onClick={async () => await logout()} />
           </div>
         </>

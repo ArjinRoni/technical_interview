@@ -8,7 +8,7 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 
 import { useFB } from './FBContext';
 
@@ -17,6 +17,8 @@ const AuthContext = createContext({
   login: async () => {},
   signup: async () => {},
   logout: async () => {},
+  deleteAccount: async () => {},
+  isAuthLoading: true,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -75,8 +77,13 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome back ${name}!`);
     } catch (error) {
       const errorCode = error.code;
+      console.log('Got error code: ', errorCode);
       const errorMessage = error.message;
-      toast.error(errorMessage);
+      if (errorCode === 'auth/invalid-credential') {
+        toast.error('Invalid username or password. Please check your credentials and try again.');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -111,8 +118,31 @@ export const AuthProvider = ({ children }) => {
     router.push('/');
   };
 
+  const deleteAccount = async () => {
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
+      try {
+        // Delete user document from Firestore
+        await deleteDoc(doc(db, 'users', currentUser.uid));
+
+        // Delete user from Firebase Authentication
+        await currentUser.delete();
+
+        setUser(null);
+        router.push('/');
+        toast.success(`Successfully deleted your account - we're sorry to see you go... 👋`);
+      } catch (error) {
+        console.log('Error deleting user:', error);
+        logout();
+        toast.error('Failed to delete your account. Please login and try again.');
+      }
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, deleteAccount, isAuthLoading }}>
       {children}
     </AuthContext.Provider>
   );

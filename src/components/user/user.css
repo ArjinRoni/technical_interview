@@ -1,0 +1,25 @@
+.user {
+    display: flex;
+    padding: 16px 32px 16px 16px;
+    align-items: center;
+    gap: 20px;
+    margin-top: 24px;
+    border-radius: 16px;
+    margin-left: -4px;
+    background-color: #141414;
+    align-self: flex-start;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 32px;
+}
+
+.label {
+    color: #757575;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

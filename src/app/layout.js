@@ -13,6 +13,8 @@ import { FontProvider } from '@/contexts/FontContext';
 import { UIProvider } from '@/contexts/UIContext';
 
 export default function RootLayout({ children }) {
+  const isDev = process.env.NODE_ENV === 'development';
+
   // Hook to set the title and meta description tags for the application
   useEffect(() => {
     document.title = 'NewFrame AI App';
@@ -27,7 +29,7 @@ export default function RootLayout({ children }) {
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={isDev}>
       <Head>
         <title>NewFrame AI App</title>
         <meta name="description" content="Welcome to the Future of Advertising" />
@@ -35,8 +37,8 @@ export default function RootLayout({ children }) {
       <body>
         <FBProvider>
           <FontProvider>
-            <UIProvider>
-              <AuthProvider>
+            <AuthProvider>
+              <UIProvider>
                 <MadisonProvider>
                   <ChatsProvider>
                     <Toaster />
@@ -44,8 +46,8 @@ export default function RootLayout({ children }) {
                     <Analytics />
                   </ChatsProvider>
                 </MadisonProvider>
-              </AuthProvider>
-            </UIProvider>
+              </UIProvider>
+            </AuthProvider>
           </FontProvider>
         </FBProvider>
       </body>
