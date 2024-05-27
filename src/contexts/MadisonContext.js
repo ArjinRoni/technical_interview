@@ -10,6 +10,7 @@ export const MadisonContext = createContext({
   assistant: null,
   currentRun: null,
   createThread: async () => {},
+  addUserMessageToThread: async () => {},
   createRun: async () => {},
 });
 
@@ -46,6 +47,21 @@ export const MadisonProvider = ({ children }) => {
     return thread.id;
   };
 
+  // Function to add user message to the thread
+  const addUserMessageToThread = async ({ message, threadId }) => {
+    await openai.beta.threads.messages.create(threadId, {
+      role: 'user',
+      content: message,
+    });
+
+    let run = await openai.beta.threads.runs.createAndPoll(threadId, {
+      assistant_id: assistant.id,
+      additional_instructions: `Respond to user's message`,
+    });
+
+    setCurrentRun(run);
+  };
+
   // Function to create a run
   const createRun = async (threadId) => {
     let run = await openai.beta.threads.runs.createAndPoll(threadId, {
@@ -62,7 +78,9 @@ export const MadisonProvider = ({ children }) => {
   }, []);
 
   return (
-    <MadisonContext.Provider value={{ openai, assistant, currentRun, createThread, createRun }}>
+    <MadisonContext.Provider
+      value={{ openai, assistant, currentRun, createThread, addUserMessageToThread, createRun }}
+    >
       {children}
     </MadisonContext.Provider>
   );
