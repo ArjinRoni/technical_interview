@@ -70,6 +70,7 @@ export const MadisonProvider = ({ children }) => {
       const requiredAction = run.required_action;
       if (requiredAction.type === 'submit_tool_outputs') {
         const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
+        const toolOutputs = [];
   
         for (const toolCall of toolCalls) {
           if (toolCall.type === 'function') {
@@ -79,7 +80,7 @@ export const MadisonProvider = ({ children }) => {
             if (functionName === 'trigger_training') {
               const classificationToken = functionArgs.classification_token;
               console.log(`Triggering training API with classification token: ${classificationToken}`);
-  
+            
               // Call the onTrainingComplete callback to initiate the training process
               const trainingSuccess = await onTrainingComplete(classificationToken);
   
@@ -89,15 +90,10 @@ export const MadisonProvider = ({ children }) => {
                   status: 'success',
                   message: `Images uploaded successfully for classification token: ${classificationToken}. Training has been completed.`,
                 };
-  
-                // Submit the tool output for the successful training
-                await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
-                  tool_outputs: [
-                    {
-                      tool_call_id: toolCall.id,
-                      output: JSON.stringify(trainingResponse),
-                    },
-                  ],
+              
+                toolOutputs.push({
+                  tool_call_id: toolCall.id,
+                  output: JSON.stringify(trainingResponse),
                 });
               } else {
                 // Training failed or encountered an error
@@ -105,24 +101,16 @@ export const MadisonProvider = ({ children }) => {
                   status: 'error',
                   message: `Training failed for classification token: ${classificationToken}.`,
                 };
-  
-                // Submit the tool output for the failed training
-                await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
-                  tool_outputs: [
-                    {
-                      tool_call_id: toolCall.id,
-                      output: JSON.stringify(trainingResponse),
-                    },
-                  ],
+              
+                toolOutputs.push({
+                  tool_call_id: toolCall.id,
+                  output: JSON.stringify(trainingResponse),
                 });
               }
-  
-              // Continue polling the existing run
-              run = await openai.beta.threads.runs.poll(threadId, run.id);
             } else if (functionName === 'trigger_inference') {
               const imagePrompts = functionArgs.image_prompts;
               console.log(`Triggering inference with image prompts: ${imagePrompts}`);
-  
+            
               // TODO: Implement the inference API call here
               // For now, let's simulate a successful inference response
               const inferenceResponse = {
@@ -135,27 +123,27 @@ export const MadisonProvider = ({ children }) => {
                   'https://example.com/image4.jpg',
                 ],
               };
-  
-              // Submit the tool output for the successful inference
-              await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
-                tool_outputs: [
-                  {
-                    tool_call_id: toolCall.id,
-                    output: JSON.stringify(inferenceResponse),
-                  },
-                ],
+            
+              toolOutputs.push({
+                tool_call_id: toolCall.id,
+                output: JSON.stringify(inferenceResponse),
               });
-  
-              // Continue polling the existing run
-              run = await openai.beta.threads.runs.poll(threadId, run.id);
             } else {
               throw new Error(`Unknown function: ${functionName}`);
             }
           }
         }
+
+        // Submit the tool outputs
+        await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
+          tool_outputs: toolOutputs,
+        });
+
+        // Continue polling the existing run
+        run = await openai.beta.threads.runs.poll(threadId, run.id);
       }
     }
-  
+
     setCurrentRun(run);
   };
 
