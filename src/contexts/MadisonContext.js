@@ -50,7 +50,7 @@ export const MadisonProvider = ({ children }) => {
   const createRun = async (threadId) => {
     let run = await openai.beta.threads.runs.createAndPoll(threadId, {
       assistant_id: assistant.id,
-      instructions: `Please address the user as ${user?.name}.`,
+      additional_instructions: `Please address the user as ${user?.name?.split(' ')[0]?.trim()}`,
     });
 
     setCurrentRun(run);
