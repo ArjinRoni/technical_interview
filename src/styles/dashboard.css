@@ -35,6 +35,21 @@
 .greeting {
     font-size: 42px;
     margin-bottom: 32px;
+    align-self: center;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typing 3s steps(30, end);
+}
+
+@keyframes typing {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 100%;
+    }
 }
 
 .dashboard-logo {
