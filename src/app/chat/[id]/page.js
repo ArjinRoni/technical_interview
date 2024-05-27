@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 import '../../../styles/chat.css';
 
-import { Sidebar, UserInput, Message } from '@/components';
+import { Sidebar, Glow, UserInput, Message } from '@/components';
 
 import { useChats } from '@/contexts/ChatsContext';
 import { useMadison } from '@/contexts/MadisonContext';
@@ -116,9 +116,15 @@ const ChatPage = ({ params }) => {
   return (
     <div className="chat-page">
       <Sidebar />
+      <Glow />
       <div className="chat-panel" style={{ marginLeft: isSidebarOpen ? 216 : 0 }}>
         {messages && messages.length > 0 && (
           <div className="chat-header">
+            <img
+              style={{ cursor: 'pointer', position: 'absolute', left: 32, width: 32, height: 32 }}
+              src="/back-gradient.png"
+              onClick={() => router.push('/dashboard')}
+            />
             <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
               {currentChat?.title}
             </p>
