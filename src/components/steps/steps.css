@@ -1,0 +1,26 @@
+.steps {
+    display: flex;
+    flex-direction: row;
+    row-gap: 12px;
+    column-gap: 16px;
+    padding-left: 64px;
+    padding-right: 64px;
+    margin-top: 64px;
+    margin-bottom: 32px;
+}
+
+.steps>* {
+    flex: 1;
+}
+
+
+@media (max-width: 1200px) {
+    .steps {
+        flex-wrap: wrap;
+        max-width: 600px;
+    }
+
+    .steps>* {
+        flex: auto;
+    }
+}

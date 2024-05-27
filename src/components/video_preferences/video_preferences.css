@@ -1,0 +1,28 @@
+.video_preferences_div {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    gap: 8px;
+}
+
+.video_preferences_div_row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-self: center;
+    gap: 8px;
+}
+
+.video_preferences_input_div {
+    display: flex;
+    padding: 0.5rem 1rem 0.5rem 1rem;
+    background-color: black;
+    border-radius: 12px;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+}
+
+
+.video_preferences_input_div p {
+    font-size: 14px;
+}

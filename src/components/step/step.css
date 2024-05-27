@@ -1,0 +1,63 @@
+.step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: #141414;
+    border-radius: 24px;
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    gap: 16px;
+    margin-top: 12px;
+    opacity: 0.0;
+}
+
+.step-title-row {
+    display: flex;
+    align-self: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.step-no-circle {
+    display: flex;
+    background: linear-gradient(to right, #7063c5, #1e1361);
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 300px;
+}
+
+.step-no {
+    font-size: 18px;
+    align-self: center;
+}
+
+.step-title {
+    font-size: 24px;
+    background: linear-gradient(to left, #7063c5, #7063c5, #524C77);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.step-description {
+    text-align: center;
+    font-size: 16px;
+}
+
+.step.animate {
+    animation: fadeIn 1s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}

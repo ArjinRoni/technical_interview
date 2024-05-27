@@ -1,0 +1,13 @@
+.image_upload_prompt_div {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    align-items: center;
+    margin-top: 18px;
+}
+
+.image_upload_button {
+    background-color: white;
+    border-radius: 6px;
+    border: none;
+}
