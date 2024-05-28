@@ -37,7 +37,7 @@ export const MadisonProvider = ({ children }) => {
       setAssistant({ id: process.env.ASSISTANT_ID });
     } else {
       const assistant_ = await openai.beta.assistants.create(config);
-      console.log(assistant_);
+      console.log('Created assistant: ', assistant_);
       setAssistant(assistant_);
     }
   };
@@ -50,20 +50,20 @@ export const MadisonProvider = ({ children }) => {
 
   // Function to add user message to the thread
   const addUserMessageToThread = async ({ message, threadId, onTrainingComplete }) => {
+    // Append message to the thread
     await openai.beta.threads.messages.create(threadId, {
       role: 'user',
       content: message,
     });
 
-    let run = currentRun; // Use the existing run if available
-
-    if (!run || run.status === 'completed') {
-      // Create a new run only if there is no active run or the previous run is completed
-      run = await openai.beta.threads.runs.createAndPoll(threadId, {
+    // Create a new run only if there is no active run or the previous run is completed
+    let run = await openai.beta.threads.runs.createAndPoll(
+      threadId,
+      {
         assistant_id: assistant.id,
-        additional_instructions: `Respond to user's message`,
-      });
-    }
+      },
+      { pollIntervalMs: 10000 },
+    );
 
     setCurrentRun(run);
 
@@ -139,16 +139,12 @@ export const MadisonProvider = ({ children }) => {
         }
 
         // Submit the tool outputs
-        await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
+        run = await openai.beta.threads.runs.submitToolOutputsAndPoll(threadId, run.id, {
           tool_outputs: toolOutputs,
         });
-
-        // Continue polling the existing run
-        run = await openai.beta.threads.runs.poll(threadId, run.id);
+        setCurrentRun(run);
       }
     }
-
-    setCurrentRun(run);
   };
 
   // Function to create a run
