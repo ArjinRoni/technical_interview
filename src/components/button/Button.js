@@ -6,13 +6,14 @@ const Button = ({
   borderRadius = 300,
   width = '100%',
   fontSize = 18,
+  marginTop = 24,
   alignSelf = undefined,
   emoji = null,
   onClick = null,
 }) => {
   return (
     <button
-      style={{ alignSelf, borderRadius, width }}
+      style={{ alignSelf, borderRadius, width, marginTop }}
       className="button"
       type={type}
       onClick={onClick ? onClick : null}
