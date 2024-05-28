@@ -117,7 +117,29 @@ const ChatPage = ({ params }) => {
                 toolCall.function.arguments,
               ).classification_token;
               setClassificationToken(classificationToken);
-              setMessages((prevMessages) => [...prevMessages, { isImageUpload: true }]);
+
+              // If the last message is still loading icon, we can update that here
+              if (messages && messages.length > 0 && messages.slice(-1)[0].isLoading) {
+                const placeholderMessage = {
+                  id: uuidv4(),
+                  role: 'assistant',
+                  text: `Thank you! You can now upload your product images below. Meanwhile, I'll proceed with the training.`,
+                  images: null,
+                  rating: 0,
+                };
+                setMessages((prevMessages) => [
+                  ...prevMessages.filter((x) => !x.isLoading),
+                  placeholderMessage,
+                ]);
+                createMessage({ message: placeholderMessage, chatId: currentChat.id });
+              }
+
+              // Open the image upload form after a second later
+              setTimeout(
+                () => setMessages((prevMessages) => [...prevMessages, { isImageUpload: true }]),
+                1000,
+              );
+
               break; // Exit the loop after finding the trigger_training function
             } else if (toolCall.function && toolCall.function.name === 'trigger_inference') {
               const imagePrompts = JSON.parse(toolCall.function.arguments).image_prompts;
@@ -242,7 +264,13 @@ const ChatPage = ({ params }) => {
         {messages && messages.length > 0 && (
           <div className="chat-header">
             <img
-              style={{ cursor: 'pointer', position: 'absolute', left: 32, width: 32, height: 32 }}
+              style={{
+                cursor: 'pointer',
+                position: 'absolute',
+                left: isSidebarOpen ? 32 : 48,
+                width: 32,
+                height: 32,
+              }}
               src="/back-gradient.png"
               onClick={() => router.push('/dashboard')}
             />
