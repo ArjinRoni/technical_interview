@@ -37,12 +37,14 @@ export const config = {
   name: 'Madison',
   instructions: instructions,
   model: 'gpt-4o',
+  temperature: 0.7,
   tools: [
     {
       type: 'function',
       function: {
         name: 'trigger_training',
-        description: 'Trigger the training process with provided classification token.',
+        description:
+          'Trigger the training process with AS SOON AS you get the classification token.',
         parameters: {
           type: 'object',
           properties: {
