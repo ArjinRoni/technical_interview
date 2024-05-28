@@ -5,6 +5,15 @@ const nextConfig = {
     ASSISTANT_ID: process.env.ASSISTANT_ID,
     ACCESS_CODE: process.env.ACCESS_CODE,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+        port: '',
+      },
+    ],
+  },
 };
 
 export default nextConfig;
