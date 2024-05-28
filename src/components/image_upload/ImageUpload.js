@@ -1,4 +1,6 @@
+'use client';
 import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-hot-toast';
 
@@ -9,14 +11,14 @@ import Button from '../button/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
 
-const ImageUpload = ({ isActive = true, chatId, onSubmit }) => {
+const ImageUpload = ({ isActive = true, chatId, imagesInit = [], onSubmit }) => {
   const { user } = useAuth();
   const { storage } = useFB();
 
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploadedImages, setUploadedImages] = useState(imagesInit);
 
   // TODO: Don't have to cloud write to show images to the user
   const handleUpload = async (e) => {
@@ -101,7 +103,14 @@ const ImageUpload = ({ isActive = true, chatId, onSubmit }) => {
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <img className="uploaded-image" key={index} src={url} />
+                  <Image
+                    className="uploaded-image"
+                    alt={`Image ${index}`}
+                    key={index}
+                    width={64}
+                    height={64}
+                    src={url}
+                  />
                   {hoveredIndex === index && isActive && (
                     <img
                       className="remove-image-button"
