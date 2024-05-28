@@ -9,9 +9,11 @@ export const MadisonContext = createContext({
   openai: null,
   assistant: null,
   currentRun: null,
+  setCurrentRun: () => {},
   createThread: async () => {},
   addUserMessageToThread: async () => {},
   createRun: async () => {},
+  resumeRun: async () => {},
 });
 
 export const useMadison = () => useContext(MadisonContext);
@@ -156,6 +158,16 @@ export const MadisonProvider = ({ children }) => {
     setCurrentRun(run);
   };
 
+  // Function to resume a run from where we left off
+  const resumeRun = async (threadId) => {
+    try {
+      const run = await openai.beta.threads.runs.retrieve(threadId, { assistant_id: assistant.id });
+      setCurrentRun(run);
+    } catch (error) {
+      console.log('Got error trying to resume run: ', error);
+    }
+  };
+
   // Hook to create assistant upon initialization
   useEffect(() => {
     createOrRetrieveAssistant();
@@ -163,7 +175,16 @@ export const MadisonProvider = ({ children }) => {
 
   return (
     <MadisonContext.Provider
-      value={{ openai, assistant, currentRun, createThread, addUserMessageToThread, createRun }}
+      value={{
+        openai,
+        assistant,
+        currentRun,
+        setCurrentRun,
+        createThread,
+        addUserMessageToThread,
+        createRun,
+        resumeRun,
+      }}
     >
       {children}
     </MadisonContext.Provider>

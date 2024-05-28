@@ -18,7 +18,7 @@ const ChatPage = ({ params }) => {
 
   const router = useRouter();
   const { isSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
-  const { openai, currentRun, addUserMessageToThread } = useMadison();
+  const { openai, currentRun, addUserMessageToThread, resumeRun } = useMadison();
   const { chats, createMessage, getMessages, deleteChat } = useChats();
   const { primaryFont } = useFont();
 
@@ -31,10 +31,27 @@ const ChatPage = ({ params }) => {
 
   // Hook to get and set the current chat based on the chat no
   useEffect(() => {
+    const loadMessages = async (chat) => {
+      const messages_ = await getMessages(chat.id);
+
+      // If the last message on the chat was from user OR if it's step 3 image upload, we re-run the assistant on the thread
+      const lastMessage = messages_.slice(-1)[0];
+      if (lastMessage?.role === 'user' || lastMessage?.step === 3) {
+        resumeRun(chat.threadId);
+        setMessages([...messages_, { step: currentStep, isLoading: true }]);
+      } else {
+        setMessages(messages_);
+      }
+    };
+
     try {
-      chats &&
-        chats.length > 0 &&
-        setCurrentChat(chats.find((chat) => chat.chatNo === parseInt(id)));
+      if (chats && chats.length > 0) {
+        const currentChat_ = chats.find((chat) => chat.chatNo === parseInt(id));
+        if (currentChat_) {
+          setCurrentChat(currentChat_);
+          loadMessages(currentChat_);
+        }
+      }
     } catch (error) {
       toast.error(`Ooops! We couldn't retrive your chat at this moment. Please try again later.`);
       console.log('Got error fetching the chat: ', error);
@@ -75,23 +92,13 @@ const ChatPage = ({ params }) => {
     trainingCompleteCallback(trainingSuccess);
   };
 
-  // Hook to retrieve messages for the current chat
-  useEffect(() => {
-    const loadMessages = async () => {
-      const messages_ = await getMessages(currentChat.id);
-      setMessages(messages_);
-    };
-
-    currentChat && loadMessages();
-  }, [currentChat]);
-
   // Hook to set the current step in the chat
   useEffect(() => {
     if (messages && messages.length > 0) {
       const { step = null } = messages.filter((x) => x.role === 'assistant').slice(-1)[0];
       setCurrentStep(step);
     }
-  }, [messages]);
+  }, [currentChat, messages]);
 
   // Hook to check for messages from the assistant
   useEffect(() => {

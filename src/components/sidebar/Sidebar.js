@@ -17,12 +17,15 @@ const Sidebar = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { chats, createChat } = useChats();
-  const { createThread, createRun } = useMadison();
+  const { createThread, createRun, setCurrentRun } = useMadison();
   const { isSidebarOpen, setIsSidebarOpen, setIsLoading, setLoadingMessage, setShowFeedbackForm } =
     useUI();
 
   // Function to create a new chat and navigate to the correct chat path
   const createNewChatAndNavigate = async () => {
+    router.push('/dashboard');
+    setCurrentRun(null);
+
     setIsLoading(true);
     setLoadingMessage(`Hang tight... We're creating a new chat for you 🚀 `);
 

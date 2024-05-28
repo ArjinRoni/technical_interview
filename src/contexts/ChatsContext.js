@@ -100,6 +100,7 @@ export const ChatsProvider = ({ children }) => {
           text: message.text,
           images: message.images || [],
           rating: message.rating || 0,
+          step: message.step || null,
           createdAt: new Date(),
         };
 
