@@ -37,7 +37,7 @@ export const MadisonProvider = ({ children }) => {
       setAssistant({ id: process.env.ASSISTANT_ID });
     } else {
       const assistant_ = await openai.beta.assistants.create(config);
-      console.log('Created assistant: ', assistant_);
+      console.log('Created new assistant: ', assistant_);
       setAssistant(assistant_);
     }
   };
@@ -57,14 +57,11 @@ export const MadisonProvider = ({ children }) => {
     });
 
     // Create a new run only if there is no active run or the previous run is completed
-    let run = await openai.beta.threads.runs.createAndPoll(
-      threadId,
-      {
-        assistant_id: assistant.id,
-      },
-      { pollIntervalMs: 10000 },
-    );
+    let run = await openai.beta.threads.runs.createAndPoll(threadId, {
+      assistant_id: assistant.id,
+    });
 
+    // Set the current run to display the assistant response to the user
     setCurrentRun(run);
 
     // Check if the run requires an action
@@ -143,6 +140,7 @@ export const MadisonProvider = ({ children }) => {
           tool_outputs: toolOutputs,
         });
 
+        // Update the current run to display the tool output to the user
         setCurrentRun(run);
       }
     }
