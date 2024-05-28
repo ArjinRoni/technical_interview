@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import Chat from '../chat/Chat';
 import Button from '../button/Button';
+import Spinner from '../spinner/Spinner';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useChats } from '@/contexts/ChatsContext';
@@ -11,7 +12,6 @@ import { useMadison } from '@/contexts/MadisonContext';
 import { useUI } from '@/contexts/UIContext';
 
 import './sidebar.css';
-import Spinner from '../spinner/Spinner';
 
 const Sidebar = () => {
   const router = useRouter();
