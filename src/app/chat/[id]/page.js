@@ -307,6 +307,7 @@ const ChatPage = ({ params }) => {
           userMessage={userMessage}
           setUserMessage={setUserMessage}
           onSubmit={addUserMessage}
+          isLoading={messages && messages.length > 0 && messages.slice(-1)[0].isLoading === true}
         />
       </div>
     </div>
