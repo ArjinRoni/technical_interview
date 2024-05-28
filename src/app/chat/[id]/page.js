@@ -23,7 +23,6 @@ const ChatPage = ({ params }) => {
   const { primaryFont } = useFont();
 
   const [currentChat, setCurrentChat] = useState(null);
-  const [uploadedImages, setUploadedImages] = useState([]);
   const [classificationToken, setClassificationToken] = useState(null);
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
@@ -42,7 +41,23 @@ const ChatPage = ({ params }) => {
   }, [chats, id]);
 
   const handleImageUpload = async (urls) => {
-    setUploadedImages((prevImages) => [...prevImages, ...urls]);
+    // Construct the message DB object
+    const message = {
+      id: uuidv4(),
+      role: 'user',
+      text: null,
+      images: urls,
+      rating: 0,
+    };
+
+    // Add new is loading assistant message to simulate loading
+    setMessages((prevMessages) => [
+      ...prevMessages.filter((x) => !x.isLoading),
+      { role: 'assistant', isLoading: true },
+    ]);
+
+    // Create the message on the DB
+    createMessage({ message, chatId: currentChat.id });
 
     const trainingSuccess = await new Promise((resolve) => {
       handleTraining(classificationToken, urls)
@@ -57,19 +72,6 @@ const ChatPage = ({ params }) => {
 
     // Call the trainingCompleteCallback with the training success status
     trainingCompleteCallback(trainingSuccess);
-
-    /*
-    if (trainingSuccess) {
-      // Send a follow-up message or action to proceed with the conversation
-      // TODO: Send system message now
-      addUserMessage(
-        'Training completed successfully. Please provide more details about the target audience and visual style.',
-      );
-    } else {
-      // Handle the case when training fails
-      addUserMessage('Training failed. Please try uploading the images again.');
-    }
-    */
   };
 
   // Hook to retrieve messages for the current chat
@@ -137,8 +139,8 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to add a message to the chat from the user
-  const addUserMessage = async (instructionMessage = null) => {
-    if (!instructionMessage && (!userMessage || userMessage.length === 0)) {
+  const addUserMessage = async () => {
+    if (!userMessage || userMessage.length === 0) {
       toast.error('Please type your message.');
       return;
     }
@@ -147,20 +149,19 @@ const ChatPage = ({ params }) => {
     const message = {
       id: uuidv4(),
       role: 'user',
-      text: instructionMessage ?? userMessage,
+      text: userMessage,
       images: null,
       rating: 0,
     };
 
     // If the message is unique, update messages and write to DB
-    if (instructionMessage || !messages.some((m) => m.text === message.text)) {
-      !instructionMessage &&
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          message,
-          { role: 'assistant', isLoading: true }, // NOTE: We also pass an `isLoading` state here to indicate to the user loading
-        ]);
-      !instructionMessage && createMessage({ message, chatId: currentChat.id });
+    if (!messages.some((m) => m.text === message.text)) {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        message,
+        { role: 'assistant', isLoading: true }, // NOTE: We also pass an `isLoading` state here to indicate to the user loading
+      ]);
+      createMessage({ message, chatId: currentChat.id });
       addUserMessageToThread({
         threadId: currentChat.threadId,
         message: message.text,
@@ -249,7 +250,7 @@ const ChatPage = ({ params }) => {
               {currentChat?.title}
             </p>
             <img
-              style={{ cursor: 'pointer', position: 'absolute', right: 96, width: 32, height: 32 }}
+              style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
               src="/delete.png"
               onClick={deleteChatAndNavigateBack}
             />
