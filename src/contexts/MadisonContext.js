@@ -142,6 +142,7 @@ export const MadisonProvider = ({ children }) => {
         run = await openai.beta.threads.runs.submitToolOutputsAndPoll(threadId, run.id, {
           tool_outputs: toolOutputs,
         });
+
         setCurrentRun(run);
       }
     }

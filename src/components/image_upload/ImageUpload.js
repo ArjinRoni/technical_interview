@@ -18,6 +18,7 @@ const ImageUpload = ({ isActive = true, chatId, onSubmit }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [uploadedImages, setUploadedImages] = useState([]);
 
+  // TODO: Don't have to cloud write to show images to the user
   const handleUpload = async (e) => {
     e.preventDefault();
     const files = e.target.files;

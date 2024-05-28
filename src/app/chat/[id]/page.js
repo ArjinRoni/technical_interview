@@ -56,10 +56,12 @@ const ChatPage = ({ params }) => {
     });
 
     // Call the trainingCompleteCallback with the training success status
-    setTrainingCompleteCallback(trainingSuccess);
+    trainingCompleteCallback(trainingSuccess);
 
+    /*
     if (trainingSuccess) {
       // Send a follow-up message or action to proceed with the conversation
+      // TODO: Send system message now
       addUserMessage(
         'Training completed successfully. Please provide more details about the target audience and visual style.',
       );
@@ -67,6 +69,7 @@ const ChatPage = ({ params }) => {
       // Handle the case when training fails
       addUserMessage('Training failed. Please try uploading the images again.');
     }
+    */
   };
 
   // Hook to retrieve messages for the current chat
@@ -190,14 +193,16 @@ const ChatPage = ({ params }) => {
         },
         body: JSON.stringify({ classificationToken, imageUrls }),
       }); */
-      const response = { status: 200 };
+      const response = { status: 200, ok: true };
       if (response.ok) {
         // Training initiated successfully
         console.log('Training initiated');
         setClassificationToken(null);
+        return true;
       } else {
         // Handle error case
         console.error('Failed to initiate training');
+        return false;
       }
     } catch (error) {
       console.error('Error triggering training:', error);
@@ -214,7 +219,7 @@ const ChatPage = ({ params }) => {
         },
         body: JSON.stringify({ imagePrompts }),
       }); */
-      const response = { status: 200 };
+      const response = { status: 200, ok: true };
       if (response.ok) {
         // Inference completed successfully
         console.log('Inference completed');
