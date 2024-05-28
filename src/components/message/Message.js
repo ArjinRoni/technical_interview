@@ -18,7 +18,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
   const { updateMessageRating } = useChats();
 
   // Parse props of the message object
-  const { id, text, role, rating, isLoading = false, isImageUpload = false } = message;
+  const { id, text, images, role, rating, isLoading = false, isImageUpload = false } = message;
   const isAI = role === 'assistant';
 
   // State to manage the rating locally
@@ -73,10 +73,11 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
       >
         {isLoading ? (
           <Spinner marginTop={0} isGray={true} />
-        ) : isImageUpload ? (
+        ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload
             isActive={isActive}
             chatId={chatId}
+            imagesInit={images && images.length > 0 ? images : []}
             onSubmit={(urls) => handleImageUpload(urls)}
           />
         ) : (
