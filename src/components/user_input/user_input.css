@@ -7,6 +7,7 @@
     justify-self: center;
     align-items: center;
     min-width: 300px;
+    z-index: 2;
 }
 
 .user-input {
@@ -26,6 +27,15 @@
     max-height: 264px;
     min-height: 48px;
     outline: none;
+}
+
+.black-bg-mask {
+    position: fixed;
+    bottom: 0;
+    z-index: 1;
+    width: 100vh;
+    height: 92px;
+    background-color: rgb(28, 28, 28);
 }
 
 .send-image {

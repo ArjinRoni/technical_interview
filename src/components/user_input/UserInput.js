@@ -24,24 +24,28 @@ const UserInput = ({ userMessage, setUserMessage, onSubmit, hide = false }) => {
     }
   };
 
-  // Hide the user input (e.g., when the focus is on the image upload form)
-  if (hide) return;
-
   return (
-    <form className="user-input-form" onSubmit={onSubmit}>
-      <textarea
-        ref={textareaRef}
-        placeholder="Reply to Madison..."
-        style={{ fontFamily: secondaryFont.style.fontFamily }}
-        className="user-input"
-        value={userMessage}
-        onChange={(e) => setUserMessage(e.target.value)}
-        onKeyDown={(e) => onEnterPress(e)}
-      />
-      {userMessage && userMessage.length > 0 && (
-        <img className="send-image" src="/send-gradient.png" onClick={onSubmit} />
-      )}
-    </form>
+    <>
+      <form
+        className="user-input-form"
+        onSubmit={onSubmit}
+        style={{ display: hide ? 'none' : 'flex' }}
+      >
+        <textarea
+          ref={textareaRef}
+          placeholder="Reply to Madison..."
+          style={{ fontFamily: secondaryFont.style.fontFamily }}
+          className="user-input"
+          value={userMessage}
+          onChange={(e) => setUserMessage(e.target.value)}
+          onKeyDown={(e) => onEnterPress(e)}
+        />
+        {userMessage && userMessage.length > 0 && (
+          <img className="send-image" src="/send-gradient.png" onClick={onSubmit} />
+        )}
+      </form>
+      <div className="black-bg-mask" />
+    </>
   );
 };
 
