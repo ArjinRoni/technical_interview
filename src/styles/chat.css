@@ -1,6 +1,7 @@
 .chat-page {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
 .chat-panel {
@@ -12,7 +13,9 @@
   align-content: center;
   justify-items: center;
   justify-content: center;
-  margin-top: 36px;
+  margin-top: 32px;
+  overflow: hidden;
+  scroll-behavior: unset;
 }
 
 .chat-header {
@@ -24,6 +27,7 @@
   justify-items: center;
   justify-content: center;
   gap: 36px;
+  margin-bottom: 16px;
 }
 
 .messages-scrollview {
@@ -32,7 +36,7 @@
   flex-direction: column;
   gap: 16px;
   height: 100vh;
-  padding-top: 48px;
+  padding-top: 32px;
   padding-left: 32px;
   padding-right: 32px;
   padding-bottom: 200px;
