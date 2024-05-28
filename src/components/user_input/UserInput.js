@@ -4,7 +4,7 @@ import './user_input.css';
 
 import { useFont } from '@/contexts/FontContext';
 
-const UserInput = ({ userMessage, setUserMessage, onSubmit }) => {
+const UserInput = ({ userMessage, setUserMessage, onSubmit, hide = false }) => {
   const { secondaryFont } = useFont();
 
   const textareaRef = useRef(null);
@@ -23,6 +23,9 @@ const UserInput = ({ userMessage, setUserMessage, onSubmit }) => {
       onSubmit();
     }
   };
+
+  // Hide the user input (e.g., when the focus is on the image upload form)
+  if (hide) return;
 
   return (
     <form className="user-input-form" onSubmit={onSubmit}>

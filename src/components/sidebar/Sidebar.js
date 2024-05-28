@@ -24,7 +24,7 @@ const Sidebar = () => {
   // Function to create a new chat and navigate to the correct chat path
   const createNewChatAndNavigate = async () => {
     setIsLoading(true);
-    setLoadingMessage(`Hang on tight... We're creating a new chat for you 🚀 `);
+    setLoadingMessage(`Hang tight... We're creating a new chat for you 🚀 `);
 
     const threadId = await createThread();
     await createRun(threadId);

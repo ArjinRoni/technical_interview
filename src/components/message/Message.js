@@ -5,18 +5,20 @@ import './message.css';
 
 import { getInitials } from '@/utils/StringUtils';
 
+import ImageUpload from '../image_upload/ImageUpload';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useFont } from '@/contexts/FontContext';
 import { useChats } from '@/contexts/ChatsContext';
 import Spinner from '../spinner/Spinner';
 
-const Message = ({ message, chatId }) => {
+const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
   const { user } = useAuth();
   const { primaryFont } = useFont();
   const { updateMessageRating } = useChats();
 
   // Parse props of the message object
-  const { id, text, role, rating, isLoading = false } = message;
+  const { id, text, role, rating, isLoading = false, isImageUpload = false } = message;
   const isAI = role === 'assistant';
 
   // State to manage the rating locally
@@ -71,6 +73,12 @@ const Message = ({ message, chatId }) => {
       >
         {isLoading ? (
           <Spinner marginTop={0} isGray={true} />
+        ) : isImageUpload ? (
+          <ImageUpload
+            isActive={isActive}
+            chatId={chatId}
+            onSubmit={(urls) => handleImageUpload(urls)}
+          />
         ) : (
           <p className="message-text" style={{ color: isAI ? 'white' : 'white' }}>
             {text}
