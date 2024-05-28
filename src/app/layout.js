@@ -13,8 +13,6 @@ import { FontProvider } from '@/contexts/FontContext';
 import { UIProvider } from '@/contexts/UIContext';
 
 export default function RootLayout({ children }) {
-  const isDev = process.env.NODE_ENV === 'development';
-
   // Hook to set the title and meta description tags for the application
   useEffect(() => {
     document.title = 'NewFrame AI App';
@@ -28,13 +26,14 @@ export default function RootLayout({ children }) {
     };
   }, []);
 
+  // NOTE: We suppress hydration warnings as described in https://stackoverflow.com/questions/75337953/what-causes-nextjs-warning-extra-attributes-from-the-server-data-new-gr-c-s-c
   return (
-    <html lang="en" suppressHydrationWarning={isDev}>
+    <html lang="en" suppressHydrationWarning={true}>
       <Head>
         <title>NewFrame AI App</title>
         <meta name="description" content="Welcome to the Future of Advertising" />
       </Head>
-      <body>
+      <body suppressHydrationWarning={true}>
         <FBProvider>
           <FontProvider>
             <AuthProvider>
