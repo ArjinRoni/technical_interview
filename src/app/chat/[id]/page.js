@@ -252,6 +252,7 @@ const ChatPage = ({ params }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
           image_prompts: imagePrompts,
           user_id: user.userId,
           chat_id: currentChat.id,
