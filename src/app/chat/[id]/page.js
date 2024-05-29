@@ -218,7 +218,7 @@ const ChatPage = ({ params }) => {
 
   const handleTraining = async (classificationToken, imageUrls) => {
     try {
-      /*const response = await fetch('http://35.232.152.58:8188/process', {
+      const response = await fetch('http://34.123.220.0:8188/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,10 +226,10 @@ const ChatPage = ({ params }) => {
         body: JSON.stringify({
           image_urls: imageUrls,
           class_prompt: classificationToken,
-          file_name: 'some_name'
+          file_name: 'some_name',
         }),
-      });*/
-      const response = { status: 200, ok: true };
+      });
+      //const response = { status: 200, ok: true };
       if (response.ok) {
         // Training initiated successfully
         console.log('Training initiated with response:', response);
@@ -248,7 +248,7 @@ const ChatPage = ({ params }) => {
   const handleInference = async (imagePrompts) => {
     try {
       // TODO: Implement the API call to trigger inference with the image prompts
-      /*       const response = await fetch('/api/inference', {
+      /*const response = await fetch('/api/inference', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
