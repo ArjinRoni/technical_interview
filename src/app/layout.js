@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import Head from 'next/head';
 import { Toaster } from 'react-hot-toast';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 
 import { FBProvider } from '@/contexts/FBContext';
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
                     <Toaster />
                     {children}
                     <Analytics />
+                    <SpeedInsights />
                   </ChatsProvider>
                 </MadisonProvider>
               </UIProvider>
