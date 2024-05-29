@@ -232,12 +232,12 @@ const ChatPage = ({ params }) => {
       const response = { status: 200, ok: true };
       if (response.ok) {
         // Training initiated successfully
-        console.log('Training initiated');
+        console.log('Training initiated with response:', response);
         setClassificationToken(null);
         return true;
       } else {
         // Handle error case
-        console.error('Failed to initiate training');
+        console.error('Failed to initiate training with response:', response);
         return false;
       }
     } catch (error) {
