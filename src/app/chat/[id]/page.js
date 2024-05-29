@@ -10,6 +10,7 @@ import { Sidebar, Glow, UserInput, Message, Progress } from '@/components';
 import { useChats } from '@/contexts/ChatsContext';
 import { useMadison } from '@/contexts/MadisonContext';
 import { useUI } from '@/contexts/UIContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useFont } from '@/contexts/FontContext';
 
 const ChatPage = ({ params }) => {
@@ -17,6 +18,7 @@ const ChatPage = ({ params }) => {
   const { id } = params;
 
   const router = useRouter();
+  const { user } = useAuth();
   const { isSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
   const { openai, currentRun, addUserMessageToThread, resumeRun } = useMadison();
   const { chats, createMessage, getMessages, deleteChat } = useChats();
@@ -218,18 +220,17 @@ const ChatPage = ({ params }) => {
 
   const handleTraining = async (classificationToken, imageUrls) => {
     try {
-      const response = await fetch('http://34.123.220.0:8188/process', {
+      // Send the request to start the training process
+      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/process`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image_urls: imageUrls,
           class_prompt: classificationToken,
-          file_name: 'some_name',
+          file_name: `${user.userId}::${currentChat.id}`,
         }),
       });
-      //const response = { status: 200, ok: true };
+
       if (response.ok) {
         // Training initiated successfully
         console.log('Training initiated with response:', response);
@@ -247,15 +248,16 @@ const ChatPage = ({ params }) => {
 
   const handleInference = async (imagePrompts) => {
     try {
-      // TODO: Implement the API call to trigger inference with the image prompts
-      /*const response = await fetch('/api/inference', {
+      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/inference`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ imagePrompts }),
-      }); */
-      const response = { status: 200, ok: true };
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_prompts: imagePrompts,
+          user_id: user.userId,
+          chat_id: currentChat.id,
+        }),
+      });
+
       if (response.ok) {
         // Inference completed successfully
         console.log('Inference completed');
