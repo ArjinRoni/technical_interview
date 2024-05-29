@@ -218,14 +218,17 @@ const ChatPage = ({ params }) => {
 
   const handleTraining = async (classificationToken, imageUrls) => {
     try {
-      // TODO: Implement the API call to trigger training with the classification token and image URLs
-      /*       const response = await fetch('/api/training', {
+      /*const response = await fetch('http://35.232.152.58:8188/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ classificationToken, imageUrls }),
-      }); */
+        body: JSON.stringify({
+          image_urls: imageUrls,
+          class_prompt: classificationToken,
+          file_name: 'some_name'
+        }),
+      });*/
       const response = { status: 200, ok: true };
       if (response.ok) {
         // Training initiated successfully
