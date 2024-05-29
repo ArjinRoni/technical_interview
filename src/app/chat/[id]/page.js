@@ -226,7 +226,7 @@ const ChatPage = ({ params }) => {
         body: JSON.stringify({
           image_urls: imageUrls,
           class_prompt: classificationToken,
-          file_name: 'some_name'
+          file_name: 'some_name',
         }),
       });
       //const response = { status: 200, ok: true };
