@@ -118,13 +118,7 @@ export const MadisonProvider = ({ children }) => {
               // For now, let's simulate a successful inference response
               const inferenceResponse = {
                 status: 'success',
-                message: 'Inference completed successfully',
-                image_urls: [
-                  'https://example.com/image1.jpg',
-                  'https://example.com/image2.jpg',
-                  'https://example.com/image3.jpg',
-                  'https://example.com/image4.jpg',
-                ],
+                message: 'Inference process started successfully',
               };
 
               toolOutputs.push({
