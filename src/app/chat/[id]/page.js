@@ -60,6 +60,18 @@ const ChatPage = ({ params }) => {
     }
   }, [chats, id]);
 
+  // Hook to poll the database for the last message (i.e., step 8)
+  useEffect(() => {
+    const loadMessages = async (chat) => {
+      const messages_ = await getMessages(chat.id);
+      setMessages(messages_);
+    };
+
+    if (currentChat && currentStep === 7) {
+      loadMessages(currentChat);
+    }
+  }, [currentStep, currentChat]);
+
   const handleImageUpload = async (urls) => {
     // Construct the message DB object
     const message = {
@@ -293,7 +305,7 @@ const ChatPage = ({ params }) => {
             <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
               {currentChat?.title}
             </p>
-            <Progress step={currentStep} maxSteps={7} />
+            <Progress step={currentStep} maxSteps={8} />
             <img
               style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
               src="/delete.png"
