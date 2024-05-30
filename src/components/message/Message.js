@@ -75,6 +75,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
           <Spinner marginTop={0} isGray={true} />
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload
+            isAI={isAI}
             isActive={isAI ? false : isActive}
             chatId={chatId}
             imagesInit={images && images.length > 0 ? images : []}

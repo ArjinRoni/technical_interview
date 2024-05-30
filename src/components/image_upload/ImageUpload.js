@@ -11,7 +11,7 @@ import Button from '../button/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
 
-const ImageUpload = ({ isActive = true, chatId, imagesInit = [], onSubmit }) => {
+const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], onSubmit }) => {
   const { user } = useAuth();
   const { storage } = useFB();
 
@@ -75,8 +75,10 @@ const ImageUpload = ({ isActive = true, chatId, imagesInit = [], onSubmit }) => 
   return (
     <div className="image-upload-form">
       <div>
-        <p style={{ color: isActive ? '#757575' : '#FFFFFF' }}>
-          Here are my beautiful product images {randChoice(['💜', '🤩', '🚀', '😍', '🥰'])}
+        <p style={{ color: isActive && !isAI ? '#757575' : '#FFFFFF' }}>
+          {isAI
+            ? `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
+            : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰'])}`}
         </p>
         <div className="upload-square">
           {isActive && (
