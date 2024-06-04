@@ -16,3 +16,4 @@ export { default as MultilineInput } from './multiline_input/MultilineInput';
 export { default as User } from './user/User';
 export { default as Setting } from './setting/Setting';
 export { default as ImageUpload } from './image_upload/ImageUpload';
+export { default as GeneratedVideos } from './generated_videos/GeneratedVideos';

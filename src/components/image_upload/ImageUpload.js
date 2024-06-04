@@ -1,5 +1,5 @@
 'use client';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-hot-toast';
@@ -18,7 +18,26 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [uploadedImages, setUploadedImages] = useState(imagesInit);
+  const [uploadedImages, setUploadedImages] = useState(isAI ? [] : imagesInit);
+
+  useEffect(() => {
+    const generateSignedUrls = async (images) => {
+      let signedUrls = [];
+      for (const image of images) {
+        let storageFilepath = image.split('://')[1]; // To remove the https:// part
+        storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
+
+        const signedUrl = await getDownloadURL(ref(storage, storageFilepath)); // Get the signed URL
+        signedUrls.push(signedUrl);
+      }
+
+      setUploadedImages(signedUrls);
+    };
+
+    if (isAI && imagesInit && imagesInit.length > 0) {
+      generateSignedUrls(imagesInit);
+    }
+  }, [imagesInit]);
 
   // TODO: Don't have to cloud write to show images to the user
   const handleUpload = async (e) => {
@@ -78,7 +97,7 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
         <p style={{ color: isActive && !isAI ? '#757575' : '#FFFFFF' }}>
           {isAI
             ? `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
-            : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰'])}`}
+            : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸'])}`}
         </p>
         <div className="upload-square">
           {isActive && (

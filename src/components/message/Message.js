@@ -6,6 +6,7 @@ import './message.css';
 import { getInitials } from '@/utils/StringUtils';
 
 import ImageUpload from '../image_upload/ImageUpload';
+import GeneratedVideos from '../generated_videos/GeneratedVideos';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useFont } from '@/contexts/FontContext';
@@ -18,7 +19,16 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
   const { updateMessageRating } = useChats();
 
   // Parse props of the message object
-  const { id, text, images, role, rating, isLoading = false, isImageUpload = false } = message;
+  const {
+    id,
+    text,
+    images = null,
+    videos = null,
+    role,
+    rating,
+    isLoading = false,
+    isImageUpload = false,
+  } = message;
   const isAI = role === 'assistant';
 
   // State to manage the rating locally
@@ -81,6 +91,8 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
             imagesInit={images && images.length > 0 ? images : []}
             onSubmit={(urls) => handleImageUpload(urls)}
           />
+        ) : videos && videos.length > 0 ? (
+          <GeneratedVideos chatId={chatId} videos={videos} />
         ) : (
           <p className="message-text" style={{ color: isAI ? 'white' : 'white' }}>
             {text}

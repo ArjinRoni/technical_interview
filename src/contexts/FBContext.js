@@ -4,12 +4,12 @@ import React, { createContext, useContext } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Firebase configuration
 
-//TODO: put to .env
+// TODO: put to .env
 const firebaseConfig = {
   apiKey: 'AIzaSyBTque6-PHscsZ8C4gL6IRjBrXHa9SyssU',
   authDomain: 'comfyui-410814.firebaseapp.com',
@@ -20,14 +20,22 @@ const firebaseConfig = {
   measurementId: 'G-LLZYVD5CE8',
 };
 
-// Initialize Firebase
+// Initialize Firebaseps
 const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Authentication and get a reference to the service
 const auth = getAuth(app);
 
 // Initialize Cloud Firestore and get a reference to the service
-const db = getFirestore(app);
+const METHOD = 'INIT'; // 'GET'
+let db = null;
+if (METHOD === 'INIT') {
+  db = initializeFirestore(app, {
+    experimentalAutoDetectLongPolling: true,
+  });
+} else {
+  db = getFirestore(app);
+}
 
 // Initialize Firebase Storage and get a reference to the service
 const storage = getStorage(app);
