@@ -271,11 +271,7 @@ const ChatPage = ({ params }) => {
         }),
       });
 
-      if (response.ok) {
-        // Inference completed successfully
-        console.log('Inference completed');
-        // TODO: Handle the generated images or output from the inference API
-      } else {
+      if (!response.ok) {
         // Handle error case
         console.error('Failed to complete inference');
       }
