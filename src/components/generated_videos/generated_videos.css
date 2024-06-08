@@ -1,0 +1,10 @@
+.video {
+    border-radius: 16px;
+    width: 128px;
+    height: 128px;
+}
+
+.videos {
+    display: flex;
+    gap: 8px;
+}

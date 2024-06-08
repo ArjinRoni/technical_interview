@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { ref, getDownloadURL } from 'firebase/storage';
 
 import './generated_videos.css';
 
+import { useFB } from '@/contexts/FBContext';
+
 const GeneratedVideos = ({ chatId, videos }) => {
+  const { storage } = useFB();
   const [signedUrls, setSignedUrls] = useState(null);
 
   useEffect(() => {
@@ -16,7 +20,7 @@ const GeneratedVideos = ({ chatId, videos }) => {
         signedUrls_.push(signedUrl);
       }
 
-      setSignedUrls(signedUrls);
+      setSignedUrls(signedUrls_);
     };
 
     if (videos && videos.length > 0) {
@@ -25,11 +29,11 @@ const GeneratedVideos = ({ chatId, videos }) => {
   }, [videos]);
 
   return (
-    <div>
+    <div className="videos">
       {signedUrls &&
         signedUrls.length > 0 &&
-        signedUrls.map((url) => (
-          <video className="video" autoPlay muted loop playsInline>
+        signedUrls.map((url, index) => (
+          <video key={index} className="video" autoPlay muted loop playsInline>
             <source src={url} type="video/mp4" />
           </video>
         ))}
