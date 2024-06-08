@@ -241,6 +241,8 @@ const ChatPage = ({ params }) => {
           image_urls: imageUrls,
           class_prompt: classificationToken,
           file_name: `${user.userId}::${currentChat.id}`,
+          user_id: user.userId,
+          chat_id: currentChat.id,
         }),
       });
 
