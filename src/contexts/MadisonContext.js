@@ -111,10 +111,6 @@ export const MadisonProvider = ({ children }) => {
                 });
               }
             } else if (functionName === 'trigger_inference') {
-              const imagePrompts = functionArgs.image_prompts;
-              console.log(`Triggering inference with image prompts: ${imagePrompts}`);
-
-              // TODO: Implement the inference API call here
               // For now, let's simulate a successful inference response
               const inferenceResponse = {
                 status: 'success',

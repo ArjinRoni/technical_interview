@@ -21,7 +21,7 @@ const ChatPage = ({ params }) => {
   const { user } = useAuth();
   const { isSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
   const { openai, currentRun, addUserMessageToThread, resumeRun } = useMadison();
-  const { chats, createMessage, getMessages, deleteChat } = useChats();
+  const { chats, updateChat, getChatDetails, createMessage, getMessages, deleteChat } = useChats();
   const { primaryFont } = useFont();
 
   const [currentChat, setCurrentChat] = useState(null);
@@ -163,12 +163,13 @@ const ChatPage = ({ params }) => {
                 toolCall.function.arguments,
               ).classification_token;
               setClassificationToken(classificationToken);
+              await updateChat(currentChat.id, { classificationToken });
               setMessages((prevMessages) => [...prevMessages, { isImageUpload: true }]);
               break; // Exit the loop after finding the trigger_training function
             } else if (toolCall.function && toolCall.function.name === 'trigger_inference') {
               const imagePrompts = JSON.parse(toolCall.function.arguments).image_prompts;
-              console.log(`Image prompts: ${imagePrompts}`);
-              await handleInference(imagePrompts);
+              const { classificationToken: token } = await getChatDetails(currentChat.id);
+              await handleInference(imagePrompts, token);
             }
           }
         }
@@ -258,13 +259,14 @@ const ChatPage = ({ params }) => {
     }
   };
 
-  const handleInference = async (imagePrompts) => {
+  const handleInference = async (imagePrompts, classificationToken) => {
     try {
       const response = await fetch(`${process.env.INSTANCE_BASE_URL}/inference`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
+          classification_token: classificationToken,
           image_prompts: imagePrompts,
           user_id: user.userId,
           chat_id: currentChat.id,

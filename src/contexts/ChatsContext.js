@@ -6,6 +6,7 @@ import {
   where,
   doc,
   getDocs,
+  getDoc,
   setDoc,
   orderBy,
   deleteDoc,
@@ -19,6 +20,8 @@ import { useAuth } from './AuthContext';
 export const ChatsContext = createContext({
   chats: [],
   createChat: async () => {},
+  updateChat: async () => {},
+  getChatDetails: async () => {},
   renameChat: async () => {},
   deleteChat: async () => {},
   createMessage: async () => {},
@@ -84,6 +87,53 @@ export const ChatsProvider = ({ children }) => {
       }
     } else {
       console.log('Cannot create a chat without user credentials');
+    }
+  };
+
+  // Function to update a chat
+  const updateChat = async (chatId, updateData = {}) => {
+    if (user && user.userId) {
+      try {
+        // Get the chat document reference
+        const chatRef = doc(db, 'chats', chatId);
+
+        // Update the chat document by appending the update data
+        await updateDoc(chatRef, { ...updateData }, { merge: true });
+      } catch (error) {
+        console.log('Got error updating chat: ', error);
+      }
+    } else {
+      console.log('Cannot update a chat without user credentials');
+    }
+  };
+
+  // Function to retrieve chat details
+  const getChatDetails = async (chatId) => {
+    if (user && user.userId) {
+      try {
+        // Get the chat document reference
+        const chatRef = doc(db, 'chats', chatId);
+
+        // Get the chat document snapshot
+        const chatSnapshot = await getDoc(chatRef);
+
+        if (chatSnapshot.exists()) {
+          // Extract the chat data from the snapshot
+          const chatData = chatSnapshot.data();
+
+          // Return the chat data
+          return chatData;
+        } else {
+          console.log('Chat document does not exist');
+          return null;
+        }
+      } catch (error) {
+        console.log('Got error getting chat details: ', error);
+        return null;
+      }
+    } else {
+      console.log('Cannot get chat details without user credentials');
+      return null;
     }
   };
 
@@ -263,6 +313,8 @@ export const ChatsProvider = ({ children }) => {
       value={{
         chats,
         createChat,
+        updateChat,
+        getChatDetails,
         renameChat,
         deleteChat,
         createMessage,
