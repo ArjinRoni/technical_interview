@@ -275,9 +275,10 @@ const ChatPage = ({ params }) => {
         }),
       });
 
-      if (!response.ok) {
-        // Handle error case
-        console.error('Failed to complete inference');
+      if (response.ok) {
+        console.log('Inference initiated with response:', response); // Inference initiated successfully
+      } else {
+        console.error('Failed to complete inference'); // Handle error case
       }
     } catch (error) {
       console.error('Error triggering inference:', error);

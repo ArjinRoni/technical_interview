@@ -37,7 +37,7 @@ const instructions = `
 export const config = {
   name: 'Madison',
   instructions: instructions,
-  model: 'gpt-4o',
+  model: 'gpt-4o', // 'gpt-4-0125-preview'
   temperature: 0.9,
   tools: [
     {

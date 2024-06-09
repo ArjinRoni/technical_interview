@@ -86,7 +86,6 @@ export const MadisonProvider = ({ children }) => {
 
               // Call the onTrainingComplete callback to initiate the training process
               const trainingSuccess = await onTrainingComplete(classificationToken);
-              console.log(`trainingSuccess:  ${trainingSuccess}`);
               if (trainingSuccess) {
                 // Training completed successfully
                 const trainingResponse = {
