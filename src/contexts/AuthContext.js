@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
       // Get user data from DB
       const userDoc = await getDoc(doc(db, 'users', userId));
-      const { name } = userDoc.data();
+      const name = userDoc?.data()?.name ?? email;
 
       setUser({ userId, name, email });
       router.push('/dashboard');
