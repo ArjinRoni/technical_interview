@@ -48,7 +48,7 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
     setUploading(true);
 
     const uploadPromises = Array.from(files).map(async (file) => {
-      const storageRef = ref(storage, `images/${user.userId}/${chatId}/inputs/${file.name}`);
+      const storageRef = ref(storage, `users/${user.userId}/${chatId}/inputs/${file.name}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
