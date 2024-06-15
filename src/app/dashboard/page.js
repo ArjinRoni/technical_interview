@@ -62,9 +62,9 @@ const Dashboard = () => {
           {getGreeting()}, {user?.name?.split(' ')[0].trim()}
         </p>
         <div className="info-boxes">
-          <InfoBox title="Ads created" value={chats?.length} />
+          <InfoBox title="Chats started" value={chats?.length} />
           <InfoBox title="Messages sent" value={messagesCount} />
-          <InfoBox title="Ads shared" value={0} />
+          <InfoBox title="Ads generated" value={0} />
         </div>
         <Steps />
       </div>

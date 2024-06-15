@@ -64,7 +64,7 @@ export const ChatsProvider = ({ children }) => {
         const userId = user.userId;
 
         // Set chat number as the next integer and chat ID as random UUID v4
-        const chatNo = chats.length + 1;
+        const chatNo = chats && chats.length > 0 ? Math.max(...chats.map((x) => x.chatNo)) + 1 : 1;
         const chatId = uuidv4();
 
         // Create the chat document

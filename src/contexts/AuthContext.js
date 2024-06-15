@@ -43,7 +43,9 @@ export const AuthProvider = ({ children }) => {
         try {
           // Get user data from DB
           const userDoc = await getDoc(doc(db, 'users', userId));
-          const { name, email } = userDoc.data();
+          const userData = userDoc?.data();
+          const email = userData?.email;
+          const name = userData?.name ?? email;
 
           setUser({ userId, name, email });
         } catch (error) {

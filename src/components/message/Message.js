@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import './message.css';
 
@@ -27,6 +27,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
     role,
     rating,
     isLoading = false,
+    isStreaming = false,
     isImageUpload = false,
   } = message;
   const isAI = role === 'assistant';
@@ -81,7 +82,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
           backgroundColor: isAI ? '#3C3C3C' : '#272727',
         }}
       >
-        {isLoading ? (
+        {(isLoading && !isStreaming) || (isStreaming && text && text.length === 0) ? (
           <Spinner marginTop={0} isGray={true} />
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload

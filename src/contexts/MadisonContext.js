@@ -51,90 +51,106 @@ export const MadisonProvider = ({ children }) => {
   };
 
   // Function to add user message to the thread
-  const addUserMessageToThread = async ({ message, threadId, onTrainingComplete }) => {
+  const addUserMessageToThread = async ({ message, threadId, onTrainingComplete, onTextDelta }) => {
     // Append message to the thread
     await openai.beta.threads.messages.create(threadId, {
       role: 'user',
       content: message,
     });
 
-    // Create a new run only if there is no active run or the previous run is completed
-    let run = await openai.beta.threads.runs.createAndPoll(threadId, {
-      assistant_id: assistant.id,
-    });
-
-    // Set the current run to display the assistant response to the user
-    setCurrentRun(run);
-
-    // Check if the run requires an action
-    if (run.status === 'requires_action') {
-      const requiredAction = run.required_action;
-      if (requiredAction.type === 'submit_tool_outputs') {
-        const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
-        const toolOutputs = [];
-
-        for (const toolCall of toolCalls) {
-          if (toolCall.type === 'function') {
-            const functionName = toolCall.function.name;
-            const functionArgs = JSON.parse(toolCall.function.arguments);
-
-            if (functionName === 'trigger_training') {
-              const classificationToken = functionArgs.classification_token;
-              console.log(
-                `Triggering training API with classification token: ${classificationToken}`,
-              );
-
-              // Call the onTrainingComplete callback to initiate the training process
-              const trainingSuccess = await onTrainingComplete(classificationToken);
-              if (trainingSuccess) {
-                // Training completed successfully
-                const trainingResponse = {
-                  status: 'success',
-                  message: `Images uploaded successfully for classification token: ${classificationToken}. Training has been completed.`,
-                };
-
-                toolOutputs.push({
-                  tool_call_id: toolCall.id,
-                  output: JSON.stringify(trainingResponse),
-                });
-              } else {
-                // Training failed or encountered an error
-                const trainingResponse = {
-                  status: 'error',
-                  message: `Training failed for classification token: ${classificationToken}.`,
-                };
-
-                toolOutputs.push({
-                  tool_call_id: toolCall.id,
-                  output: JSON.stringify(trainingResponse),
-                });
+    // Create a new run with streaming
+    let run = openai.beta.threads.runs
+      .stream(threadId, { assistant_id: assistant.id })
+      .on('textCreated', (text) => console.log('\nassistant > '))
+      .on('textDelta', (textDelta, snapshot) => onTextDelta(textDelta.value))
+      .on('toolCallCreated', (toolCall) => console.log(`\nassistant > ${toolCall.type}\n\n`))
+      .on('toolCallDelta', (toolCallDelta, snapshot) => {
+        if (toolCallDelta.type === 'code_interpreter') {
+          if (toolCallDelta.code_interpreter.input) {
+            console.log(toolCallDelta.code_interpreter.input);
+          }
+          if (toolCallDelta.code_interpreter.outputs) {
+            console.log('\noutput >\n');
+            toolCallDelta.code_interpreter.outputs.forEach((output) => {
+              if (output.type === 'logs') {
+                console.log(`\n${output.logs}\n`);
               }
-            } else if (functionName === 'trigger_inference') {
-              // For now, let's simulate a successful inference response
-              const inferenceResponse = {
-                status: 'success',
-                message: 'Inference process started successfully',
-              };
-
-              toolOutputs.push({
-                tool_call_id: toolCall.id,
-                output: JSON.stringify(inferenceResponse),
-              });
-            } else {
-              throw new Error(`Unknown function: ${functionName}`);
-            }
+            });
           }
         }
+      });
 
-        // Submit the tool outputs
-        run = await openai.beta.threads.runs.submitToolOutputsAndPoll(threadId, run.id, {
-          tool_outputs: toolOutputs,
-        });
+    // Check if the run requires an action
+    run.on('runFinished', async (run) => {
+      if (run.status === 'requires_action') {
+        const requiredAction = run.required_action;
+        if (requiredAction.type === 'submit_tool_outputs') {
+          const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
+          const toolOutputs = [];
 
-        // Update the current run to display the tool output to the user
-        setCurrentRun(run);
+          for (const toolCall of toolCalls) {
+            if (toolCall.type === 'function') {
+              const functionName = toolCall.function.name;
+              const functionArgs = JSON.parse(toolCall.function.arguments);
+
+              if (functionName === 'trigger_training') {
+                const classificationToken = functionArgs.classification_token;
+                console.log(
+                  `Triggering training API with classification token: ${classificationToken}`,
+                );
+
+                // Call the onTrainingComplete callback to initiate the training process
+                const trainingSuccess = await onTrainingComplete(classificationToken);
+                if (trainingSuccess) {
+                  // Training completed successfully
+                  const trainingResponse = {
+                    status: 'success',
+                    message: `Images uploaded successfully for classification token: ${classificationToken}. Training has been completed.`,
+                  };
+
+                  toolOutputs.push({
+                    tool_call_id: toolCall.id,
+                    output: JSON.stringify(trainingResponse),
+                  });
+                } else {
+                  // Training failed or encountered an error
+                  const trainingResponse = {
+                    status: 'error',
+                    message: `Training failed for classification token: ${classificationToken}.`,
+                  };
+
+                  toolOutputs.push({
+                    tool_call_id: toolCall.id,
+                    output: JSON.stringify(trainingResponse),
+                  });
+                }
+              } else if (functionName === 'trigger_inference') {
+                // For now, let's simulate a successful inference response
+                const inferenceResponse = {
+                  status: 'success',
+                  message: 'Inference process started successfully',
+                };
+
+                toolOutputs.push({
+                  tool_call_id: toolCall.id,
+                  output: JSON.stringify(inferenceResponse),
+                });
+              } else {
+                throw new Error(`Unknown function: ${functionName}`);
+              }
+            }
+          }
+
+          // Submit the tool outputs
+          run = await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
+            tool_outputs: toolOutputs,
+          });
+        }
       }
-    }
+
+      // TODO:
+      // setCurrentRun(run);
+    });
   };
 
   // Function to create a run

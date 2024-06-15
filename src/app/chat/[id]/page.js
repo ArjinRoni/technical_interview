@@ -24,12 +24,16 @@ const ChatPage = ({ params }) => {
   const { chats, updateChat, getChatDetails, createMessage, getMessages, deleteChat } = useChats();
   const { primaryFont } = useFont();
 
+  const [streamedMessage, setStreamedMessage] = useState('');
   const [currentChat, setCurrentChat] = useState(null);
   const [classificationToken, setClassificationToken] = useState(null);
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [currentStep, setCurrentStep] = useState(null);
   const [trainingCompleteCallback, setTrainingCompleteCallback] = useState(null);
+
+  // Const to track if the current chat has messages
+  const hasMessages = messages && messages.length > 0;
 
   // Hook to get and set the current chat based on the chat no
   useEffect(() => {
@@ -67,48 +71,52 @@ const ChatPage = ({ params }) => {
       setMessages(messages_);
     };
 
-    if (currentChat && currentStep === 7) {
+    if (currentChat && currentStep && currentStep === 7) {
       loadMessages(currentChat);
     }
   }, [currentStep, currentChat]);
 
   const handleImageUpload = async (urls) => {
-    // Construct the message DB object
-    const message = {
-      id: uuidv4(),
-      role: 'user',
-      text: null,
-      images: urls,
-      rating: 0,
-    };
+    try {
+      // Construct the message DB object
+      const message = {
+        id: uuidv4(),
+        role: 'user',
+        text: null,
+        images: urls,
+        rating: 0,
+      };
 
-    // Add new is loading assistant message to simulate loading
-    setMessages((prevMessages) => [
-      ...prevMessages.filter((x) => !x.isLoading),
-      { role: 'assistant', step: currentStep, isLoading: true },
-    ]);
+      // Add new is loading assistant message to simulate loading
+      setMessages((prevMessages) => [
+        ...prevMessages.filter((x) => !x.isLoading),
+        { role: 'assistant', step: currentStep, isLoading: true },
+      ]);
 
-    // Create the message on the DB
-    createMessage({ message, chatId: currentChat.id });
+      // Create the message on the DB
+      createMessage({ message, chatId: currentChat.id });
 
-    const trainingSuccess = await new Promise((resolve) => {
-      handleTraining(classificationToken, urls)
-        .then((success) => {
-          resolve(success);
-        })
-        .catch((error) => {
-          console.error('Error during training:', error);
-          resolve(false);
-        });
-    });
+      const trainingSuccess = await new Promise((resolve) => {
+        handleTraining(classificationToken, urls)
+          .then((success) => {
+            resolve(success);
+          })
+          .catch((error) => {
+            console.error('Error during training:', error);
+            resolve(false);
+          });
+      });
 
-    // Call the trainingCompleteCallback with the training success status
-    trainingCompleteCallback(trainingSuccess);
+      // Call the trainingCompleteCallback with the training success status
+      trainingCompleteCallback(trainingSuccess);
+    } catch (error) {
+      console.log('Got error @handleImageUpload: ', error);
+    }
   };
 
   // Hook to set the current step in the chat
   useEffect(() => {
-    if (messages && messages.length > 0) {
+    if (hasMessages) {
       const { step = null } = messages.filter((x) => x.role === 'assistant').slice(-1)[0];
       setCurrentStep(step);
     }
@@ -117,62 +125,69 @@ const ChatPage = ({ params }) => {
   // Hook to check for messages from the assistant
   useEffect(() => {
     const checkForMessages = async (run) => {
-      // Get messages in thread and update UI and DB accordingly
-      const openaiMessages = await openai.beta.threads.messages.list(run.thread_id);
-      for (const openaiMessage of openaiMessages.data.reverse()) {
-        // Get role, text, and step
-        const role = openaiMessage.role;
-        let text = openaiMessage.content[0].text.value;
-        let step = null;
+      try {
+        // Get the thread ID from the current chat
+        const threadId = currentChat.threadId;
 
-        // If the role is assistant, we parse it
-        if (role === 'assistant') {
-          try {
-            step = parseInt(text.split(' ')[0].replace('[', '').replace(']', ''));
-            text = text.split('] ').slice(-1)[0];
-          } catch (error) {
-            console.log('Got error parsing assistant response: ', error);
+        // Get messages in thread and update UI and DB accordingly
+        const openaiMessages = await openai.beta.threads.messages.list(threadId);
+        for (const openaiMessage of openaiMessages.data.reverse()) {
+          // Get role, text, and step
+          const role = openaiMessage.role;
+          let text = openaiMessage.content[0].text.value;
+          let step = null;
+
+          // If the role is assistant, we parse it
+          if (role === 'assistant') {
+            try {
+              step = parseInt(text.split(' ')[0].replace('[', '').replace(']', ''));
+              text = text.split('] ').slice(-1)[0];
+            } catch (error) {
+              console.log('Got error parsing assistant response: ', error);
+            }
+          }
+
+          // Construct the message DB object
+          const message = {
+            id: uuidv4(),
+            role,
+            text,
+            images: null,
+            step,
+            rating: 0,
+          };
+
+          // If the message is unique, update messages and write to DB
+          if (!messages.some((m) => m.text === message.text)) {
+            setMessages((prevMessages) => [...prevMessages.filter((x) => !x.isLoading), message]); // NOTE: We remove the loading messages here
+            createMessage({ message, chatId: currentChat.id });
           }
         }
 
-        // Construct the message DB object
-        const message = {
-          id: uuidv4(),
-          role,
-          text,
-          images: null,
-          step,
-          rating: 0,
-        };
-
-        // If the message is unique, update messages and write to DB
-        if (!messages.some((m) => m.text === message.text)) {
-          setMessages((prevMessages) => [...prevMessages.filter((x) => !x.isLoading), message]); // NOTE: We remove the loading messages here
-          createMessage({ message, chatId: currentChat.id });
-        }
-      }
-
-      // If the run requires an action, execut the action accordingly
-      if (run.status === 'requires_action') {
-        const requiredAction = run.required_action;
-        if (requiredAction.type === 'submit_tool_outputs') {
-          const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
-          for (const toolCall of toolCalls) {
-            if (toolCall.function && toolCall.function.name === 'trigger_training') {
-              const classificationToken = JSON.parse(
-                toolCall.function.arguments,
-              ).classification_token;
-              setClassificationToken(classificationToken);
-              await updateChat(currentChat.id, { classificationToken });
-              setMessages((prevMessages) => [...prevMessages, { isImageUpload: true }]);
-              break; // Exit the loop after finding the trigger_training function
-            } else if (toolCall.function && toolCall.function.name === 'trigger_inference') {
-              const imagePrompts = JSON.parse(toolCall.function.arguments).image_prompts;
-              const { classificationToken: token } = await getChatDetails(currentChat.id);
-              await handleInference(imagePrompts, token);
+        // If the run requires an action, execut the action accordingly
+        if (run.status === 'requires_action') {
+          const requiredAction = run.required_action;
+          if (requiredAction.type === 'submit_tool_outputs') {
+            const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
+            for (const toolCall of toolCalls) {
+              if (toolCall.function && toolCall.function.name === 'trigger_training') {
+                const classificationToken = JSON.parse(
+                  toolCall.function.arguments,
+                ).classification_token;
+                setClassificationToken(classificationToken);
+                await updateChat(currentChat.id, { classificationToken });
+                setMessages((prevMessages) => [...prevMessages, { isImageUpload: true }]);
+                break; // Exit the loop after finding the trigger_training function
+              } else if (toolCall.function && toolCall.function.name === 'trigger_inference') {
+                const imagePrompts = JSON.parse(toolCall.function.arguments).image_prompts;
+                const { classificationToken: token } = await getChatDetails(currentChat.id);
+                await handleInference(imagePrompts, token);
+              }
             }
           }
         }
+      } catch (error) {
+        console.log('Got error @checkForMessages: ', error);
       }
     };
 
@@ -187,37 +202,64 @@ const ChatPage = ({ params }) => {
 
   // Function to add a message to the chat from the user
   const addUserMessage = async () => {
-    if (!userMessage || userMessage.length === 0) {
-      toast.error('Please type your message.');
-      return;
+    try {
+      if (!userMessage || userMessage.length === 0) {
+        toast.error('Please type your message.');
+        return;
+      }
+
+      // Construct the message DB object
+      const message = {
+        id: uuidv4(),
+        role: 'user',
+        text: userMessage,
+        images: null,
+        rating: 0,
+      };
+
+      // If the message is unique, update messages and write to DB
+      if (!messages.some((m) => m.text === message.text)) {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          message,
+          {
+            role: 'assistant',
+            step: currentStep,
+            isStreaming: true,
+            text: streamedMessage,
+            isLoading: true,
+          }, // NOTE: We also pass an `isLoading` state here to indicate to the user loading
+        ]);
+
+        setStreamedMessage('');
+        createMessage({ message, chatId: currentChat.id });
+        addUserMessageToThread({
+          threadId: currentChat.threadId,
+          message: message.text,
+          onTrainingComplete: handleTrainingComplete,
+          onTextDelta: (delta) => {
+            // Update the streaming message
+            setStreamedMessage((prev) => {
+              let result = prev + delta;
+
+              // If this is the first part of the message, we check for step updates
+              if (result && result.length < 8) {
+                const step = parseInt(result?.split(' ')[0]?.replace('[', '')?.replace(']', ''));
+                currentStep !== step && setCurrentStep(step);
+                result = result?.split('] ')?.slice(-1)[0];
+              }
+
+              return result;
+            });
+          },
+        });
+      }
+
+      // Reset the user message
+      setUserMessage('');
+    } catch (error) {
+      console.log('Got error @addUserMessage: ', error);
     }
-
-    // Construct the message DB object
-    const message = {
-      id: uuidv4(),
-      role: 'user',
-      text: userMessage,
-      images: null,
-      rating: 0,
-    };
-
-    // If the message is unique, update messages and write to DB
-    if (!messages.some((m) => m.text === message.text)) {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        message,
-        { role: 'assistant', step: currentStep, isLoading: true }, // NOTE: We also pass an `isLoading` state here to indicate to the user loading
-      ]);
-      createMessage({ message, chatId: currentChat.id });
-      addUserMessageToThread({
-        threadId: currentChat.threadId,
-        message: message.text,
-        onTrainingComplete: handleTrainingComplete,
-      });
-    }
-
-    // Reset the user message
-    setUserMessage('');
   };
 
   // Function to delete the chat and navigate back
@@ -290,37 +332,38 @@ const ChatPage = ({ params }) => {
       <Sidebar />
       <Glow />
       <div className="chat-panel" style={{ marginLeft: isSidebarOpen ? 216 : 0 }}>
-        {messages && messages.length > 0 && (
-          <div className="chat-header">
-            <img
-              style={{
-                cursor: 'pointer',
-                position: 'absolute',
-                left: isSidebarOpen ? 32 : 48,
-                width: 32,
-                height: 32,
-              }}
-              src="/back-gradient.png"
-              onClick={() => router.push('/dashboard')}
-            />
-            <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
-              {currentChat?.title}
-            </p>
-            <Progress step={currentStep} maxSteps={8} />
-            <img
-              style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
-              src="/delete.png"
-              onClick={deleteChatAndNavigateBack}
-            />
-          </div>
-        )}
-        {messages && messages.length > 0 && (
+        <div className="chat-header">
+          <img
+            style={{
+              cursor: 'pointer',
+              position: 'absolute',
+              left: isSidebarOpen ? 64 : 48,
+              width: 32,
+              height: 32,
+            }}
+            src="/back-gradient.png"
+            onClick={() => router.push('/dashboard')}
+          />
+          <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
+            {currentChat?.title}
+          </p>
+          {hasMessages && <Progress step={currentStep} maxSteps={8} />}
+          <img
+            style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
+            src="/delete.png"
+            onClick={deleteChatAndNavigateBack}
+          />
+        </div>
+        {hasMessages && (
           <div className="messages-scrollview">
             {currentChat &&
               messages.map((message, index) => (
                 <Message
                   key={index}
-                  message={message}
+                  message={{
+                    ...message,
+                    text: message.isStreaming ? streamedMessage : message.text,
+                  }}
                   chatId={currentChat.id}
                   isActive={index === messages.length - 1}
                   handleImageUpload={(urls) => handleImageUpload(urls)}
@@ -329,11 +372,11 @@ const ChatPage = ({ params }) => {
           </div>
         )}
         <UserInput
-          hide={messages && messages.length > 0 && messages.slice(-1)[0].isImageUpload === true}
+          hide={hasMessages && messages.slice(-1)[0].isImageUpload === true}
           userMessage={userMessage}
           setUserMessage={setUserMessage}
           onSubmit={addUserMessage}
-          isLoading={messages && messages.length > 0 && messages.slice(-1)[0].isLoading === true}
+          isLoading={hasMessages && messages.slice(-1)[0].isLoading === true}
         />
       </div>
     </div>
