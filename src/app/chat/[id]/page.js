@@ -40,7 +40,6 @@ const ChatPage = ({ params }) => {
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [currentStep, setCurrentStep] = useState(null);
-  const [trainingCompleteCallback, setTrainingCompleteCallback] = useState(null);
 
   // Const to track if the current chat has messages
   const hasMessages = messages && messages.length > 0;
@@ -107,22 +106,6 @@ const ChatPage = ({ params }) => {
         updateMessages: false,
         addToDB: false,
       });
-
-      /*
-      const trainingSuccess = await new Promise((resolve) => {
-        handleTraining(classificationToken, urls)
-          .then((success) => {
-            resolve(success);
-          })
-          .catch((error) => {
-            console.error('Error during training:', error);
-            resolve(false);
-          });
-      });
-
-      // Call the trainingCompleteCallback with the training success status
-      setTrainingCompleteCallback(trainingSuccess);
-      */
     } catch (error) {
       console.log('Got error @handleImageUpload: ', error);
     }
@@ -280,12 +263,6 @@ const ChatPage = ({ params }) => {
     currentChat && currentRun && checkForMessages(currentRun);
   }, [currentChat, currentRun]);
 
-  const handleTrainingComplete = () => {
-    return new Promise((resolve) => {
-      setTrainingCompleteCallback(() => resolve);
-    });
-  };
-
   // Function to add a message to the chat from the user
   const addUserMessage = ({ messageInit = null, updateMessages = true, addToDB = true } = {}) => {
     try {
@@ -358,7 +335,7 @@ const ChatPage = ({ params }) => {
     businessDescription,
     classificationToken,
     imageUrls,
-    simulate = true,
+    simulate = false,
   ) => {
     try {
       if (simulate) {
@@ -471,7 +448,7 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle inference
-  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = true) => {
+  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = false) => {
     try {
       if (simulate) {
         console.log('Inference simulated.');

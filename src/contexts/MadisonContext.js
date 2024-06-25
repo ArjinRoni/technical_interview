@@ -147,14 +147,15 @@ export const MadisonProvider = ({ children }) => {
 
         // TRIGGER INFERENCE
         if (name === 'trigger_inference') {
-          const { image_prompts } = args;
+          const { image_prompts, classification_token } = args;
           console.log(
             `Triggered inference with 
-            image prompts "${image_prompts}"`,
+            image prompts "${image_prompts}" and
+            classification token of "${classification_token}"`,
           );
 
           // Call the specified function for handling inference
-          const success = await onInferenceCalled(image_prompts);
+          const success = await onInferenceCalled(image_prompts, classification_token);
 
           // Determine the tool output based on the response received
           toolOutput = success ? { status: 'success' } : { status: 'error' };
