@@ -327,6 +327,7 @@ const ChatPage = ({ params }) => {
         message: message.text,
         onTrainingCalled: handleTrainingCalled,
         onMoodboardCalled: handleMoodboardCalled,
+        onInferenceCalled: handleInferenceCalled,
         onTextDelta: (textDelta) => handleTextDelta(textDelta),
         onTextDone: (text) => handleTextDone(text),
       });
@@ -396,9 +397,34 @@ const ChatPage = ({ params }) => {
 
   // Function to handle moodboard image selection
   const handleMoodboardImageSelection = async (images) => {
-    console.log('Selected images: ', images);
-    return;
-    // TODO: Continue implementing this function
+    const message = {
+      id: uuidv4(),
+      role: 'user',
+      text: null,
+      images,
+      step: currentStep,
+      rating: 0,
+    };
+
+    // Create the message on the DB
+    createMessage({ message, chatId: currentChat.id });
+
+    // Add user message to the thread to get assistant response
+    addUserMessage({
+      messageInit: `<USER HAS SELECTED MOODBOARD IMAGES: [${[images]}]>`,
+      updateMessages: false,
+      addToDB: false,
+    });
+  };
+
+  // Generate the image URLs for the moodboard in parallel
+  const generateImagesParallel = async (imagePrompts) => {
+    const imagePromises = imagePrompts.map(async (imagePrompt) => {
+      const imageBase64 = await generateImage(imagePrompt);
+      return { prompt: imagePrompt, base64: imageBase64 };
+    });
+
+    return Promise.all(imagePromises);
   };
 
   // Function to handle moodboard
@@ -408,11 +434,7 @@ const ChatPage = ({ params }) => {
       setMessages((prev) => [...removeLoading(prev), MESSAGES.LOADING]);
 
       // Generate the image URLs for the moodboard
-      let images = [];
-      for (const imagePrompt of imagePrompts) {
-        const imageBase64 = await generateImage(imagePrompt);
-        images.push({ prompt: imagePrompt, base64: imageBase64 });
-      }
+      let images = await generateImagesParallel(imagePrompts);
 
       const uploadPromises = Array.from(images).map(async ({ prompt, base64 }, index) => {
         const prompt_ = prompt.replaceAll(' ', '_').replaceAll(',', '');
@@ -447,7 +469,7 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle inference
-  const handleInference = async (imagePrompts, classificationToken, simulate = true) => {
+  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = true) => {
     try {
       if (simulate) {
         console.log('Inference simulated.');
@@ -531,7 +553,7 @@ const ChatPage = ({ params }) => {
           <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
             {currentChat?.title}
           </p>
-          {hasMessages && <Progress step={currentStep} maxSteps={8} />}
+          {hasMessages && <Progress step={currentStep} maxSteps={10} />}
           <img
             style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
             src="/delete.png"

@@ -31,6 +31,7 @@ const ImageUpload = ({
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [uploadedImages, setUploadedImages] = useState(isAI ? [] : imagesInit);
   const [selectedImages, setSelectedImages] = useState(isMoodboard ? selectedImagesInit : null); // Selected images for the moodboard
+  const [showMoodboardSubmitButton, setShowSubmitMoodboardButton] = useState(isMoodboard);
 
   useEffect(() => {
     const generateSignedUrls = async (images) => {
@@ -113,6 +114,12 @@ const ImageUpload = ({
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
+  // Function to submit moodboard images
+  const onSubmitMoodboard_ = () => {
+    setShowSubmitMoodboardButton(false);
+    onSubmitMoodboard(selectedImages);
+  };
+
   return (
     <div className="image-upload-form">
       <div>
@@ -125,7 +132,9 @@ const ImageUpload = ({
         >
           {isAI
             ? isMoodboard
-              ? 'Please select the images you like below or skip if you wish.'
+              ? showMoodboardSubmitButton
+                ? 'Please select the images you like below or skip if you wish.'
+                : 'Thank you for your selection!'
               : `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
             : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸'])}`}
         </p>
@@ -203,7 +212,7 @@ const ImageUpload = ({
             />
           </div>
         )}
-        {isMoodboard && (
+        {showMoodboardSubmitButton && isMoodboard && (
           <div className="image-upload-button-div">
             <Button
               text="Next"
@@ -213,7 +222,7 @@ const ImageUpload = ({
               alignSelf="flex-end"
               borderRadius={8}
               marginTop={24}
-              onClick={onSubmitMoodboard(selectedImages)}
+              onClick={() => onSubmitMoodboard_()}
             />
           </div>
         )}

@@ -55,7 +55,7 @@ export const MadisonProvider = ({ children }) => {
   const generateImage = async (prompt, n = 1, model = 'dall-e-2') => {
     const response = await openai.images.generate({
       model,
-      prompt,
+      prompt: `Do not generate product images, instead generate an artistic style image based on the following prompt: ${prompt}`,
       n,
       size: model === 'dall-e-2' ? '256x256' : '1024x1024',
       response_format: 'b64_json',
@@ -71,6 +71,7 @@ export const MadisonProvider = ({ children }) => {
     threadId,
     onTrainingCalled = async () => {},
     onMoodboardCalled = async () => {},
+    onInferenceCalled = async () => {},
     onTextDelta = () => {},
     onTextDone = () => {},
   }) => {
@@ -142,20 +143,21 @@ export const MadisonProvider = ({ children }) => {
 
           // Determine the tool output based on the response received
           toolOutput = success ? { status: 'success' } : { status: 'error' };
-
-          // Get the current run and submit tool outputs
-          const toolOutputs = [{ tool_call_id: toolCall.id, output: JSON.stringify(toolOutput) }];
-          const currentRun = run.currentRun();
-          await openai.beta.threads.runs.submitToolOutputs(threadId, currentRun.id, {
-            tool_outputs: toolOutputs,
-          });
-
-          return; // For moodboard only, we return without further streaming
         }
 
         // TRIGGER INFERENCE
         if (name === 'trigger_inference') {
-          toolOutput = { status: 'success' }; // Simulate a successful inference response
+          const { image_prompts } = args;
+          console.log(
+            `Triggered inference with 
+            image prompts "${image_prompts}"`,
+          );
+
+          // Call the specified function for handling inference
+          const success = await onInferenceCalled(image_prompts);
+
+          // Determine the tool output based on the response received
+          toolOutput = success ? { status: 'success' } : { status: 'error' };
         }
 
         // Get the current run
