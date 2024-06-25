@@ -134,11 +134,11 @@ export const MadisonProvider = ({ children }) => {
 
         // TRIGGER MOODBOARD
         if (name === 'trigger_moodboard') {
-          const { image_prompts } = args;
-          console.log(`Triggered moodboard with image prompts of [${image_prompts}].`);
+          const { moodboard_image_prompts } = args;
+          console.log(`Triggered moodboard with image prompts of [${moodboard_image_prompts}].`);
 
           // Call the specified function for handling moodboard
-          const success = await onMoodboardCalled(image_prompts);
+          const success = await onMoodboardCalled(moodboard_image_prompts);
 
           // Determine the tool output based on the response received
           toolOutput = success ? { status: 'success' } : { status: 'error' };
