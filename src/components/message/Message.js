@@ -126,7 +126,7 @@ const Message = ({
                 li: ({ node, ...props }) => <li style={{ marginBottom: '6px' }} {...props} />,
               }}
             >
-              {formatMarkdownNewLines(text)}
+              {formatMarkdownNewLines(text?.trim())}
             </ReactMarkdown>
           </div>
         )}
