@@ -7,11 +7,22 @@ import { toast } from 'react-hot-toast';
 import './image_upload.css';
 
 import Button from '../button/Button';
+import Spinner from '../spinner/Spinner';
+import Checkbox from '../checkbox/Checkbox';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
 
-const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], onSubmit }) => {
+const ImageUpload = ({
+  isAI = false,
+  isActive = true,
+  chatId = null,
+  imagesInit = [],
+  isMoodboard = false,
+  selectedImagesInit = [],
+  onSubmit = () => {},
+  onSubmitMoodboard = () => {},
+}) => {
   const { user } = useAuth();
   const { storage } = useFB();
 
@@ -19,16 +30,27 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
   const [uploading, setUploading] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [uploadedImages, setUploadedImages] = useState(isAI ? [] : imagesInit);
+  const [selectedImages, setSelectedImages] = useState(isMoodboard ? selectedImagesInit : null); // Selected images for the moodboard
 
   useEffect(() => {
     const generateSignedUrls = async (images) => {
       let signedUrls = [];
       for (const image of images) {
-        let storageFilepath = image.split('://')[1]; // To remove the https:// part
-        storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
+        try {
+          let storageFilepath = null;
 
-        const signedUrl = await getDownloadURL(ref(storage, storageFilepath)); // Get the signed URL
-        signedUrls.push(signedUrl);
+          if (image.startsWith('http')) {
+            storageFilepath = image.split('://')[1]; // To remove the https:// part
+            storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
+          } else {
+            storageFilepath = image;
+          }
+
+          const signedUrl = await getDownloadURL(ref(storage, storageFilepath)); // Get the signed URL
+          signedUrls.push(signedUrl);
+        } catch (error) {
+          console.log('Got error getting signed url for: ', image, error);
+        }
       }
 
       setUploadedImages(signedUrls);
@@ -56,7 +78,7 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
 
     const urls = await Promise.all(uploadPromises);
     setUploadedImages((prevImages) => [...prevImages, ...urls]);
-    setUploading(false);
+    setTimeout(() => setUploading(false), 500);
   };
 
   // Function to handle form submit
@@ -94,9 +116,17 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
   return (
     <div className="image-upload-form">
       <div>
-        <p style={{ color: isActive && !isAI ? '#757575' : '#FFFFFF' }}>
+        <p
+          style={{
+            color: isActive && !isAI ? '#757575' : isMoodboard ? '#FFFFFF' : '#FFFFFF',
+            fontWeight: isMoodboard ? 550 : 400,
+            marginBottom: isMoodboard ? 24 : undefined,
+          }}
+        >
           {isAI
-            ? `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
+            ? isMoodboard
+              ? 'Please select the images you like below or skip if you wish.'
+              : `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
             : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸'])}`}
         </p>
         <div className="upload-square">
@@ -111,11 +141,19 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
             />
           )}
           <div className="uploaded-images-div">
-            {isActive && (
-              <div className="upload-image-box" onClick={handleClickUpload}>
-                <img style={{ height: 32, width: 32 }} src="/upload.png" />
-              </div>
-            )}
+            {isActive &&
+              (uploading ? (
+                <Spinner
+                  size={32}
+                  marginTop={34}
+                  extraStyle={{ marginLeft: 34, marginRight: 34, marginBottom: 34 }}
+                  isDark={true}
+                />
+              ) : (
+                <div className="upload-image-box" onClick={handleClickUpload}>
+                  <img style={{ height: 44, width: 44 }} src="/upload.png" />
+                </div>
+              ))}
             {uploadedImages.length > 0 &&
               uploadedImages.map((url, index) => (
                 <div
@@ -124,12 +162,20 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
+                  {isMoodboard && (
+                    <Checkbox
+                      isSelectedInit={selectedImagesInit?.includes(url)}
+                      onPress={() => setSelectedImages((prev) => [...prev, url])}
+                    />
+                  )}
                   <Image
                     className="uploaded-image"
                     alt={`Image ${index}`}
+                    width={0}
+                    height={0}
                     key={index}
-                    width={64}
-                    height={64}
+                    sizes="100vw"
+                    style={{ width: 'auto', height: 128 }} // optional
                     src={url}
                   />
                   {hoveredIndex === index && isActive && (
@@ -154,6 +200,20 @@ const ImageUpload = ({ isAI = false, isActive = true, chatId, imagesInit = [], o
               borderRadius={8}
               marginTop={24}
               onClick={() => onSubmit_()}
+            />
+          </div>
+        )}
+        {isMoodboard && (
+          <div className="image-upload-button-div">
+            <Button
+              text="Next"
+              type="button"
+              width={64}
+              fontSize={16}
+              alignSelf="flex-end"
+              borderRadius={8}
+              marginTop={24}
+              onClick={onSubmitMoodboard(selectedImages)}
             />
           </div>
         )}

@@ -1,19 +1,28 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
+import ReactMarkdown from 'react-markdown';
 import './message.css';
 
-import { getInitials } from '@/utils/StringUtils';
+import { formatMarkdownNewLines, getInitials } from '@/utils/StringUtils';
+import { STEPS } from '@/utils/StepUtil';
 
 import ImageUpload from '../image_upload/ImageUpload';
 import GeneratedVideos from '../generated_videos/GeneratedVideos';
+import Spinner from '../spinner/Spinner';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useFont } from '@/contexts/FontContext';
 import { useChats } from '@/contexts/ChatsContext';
-import Spinner from '../spinner/Spinner';
 
-const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
+const Message = ({
+  message,
+  chatId,
+  isActive = true,
+  label = null,
+  handleImageUpload = () => {},
+  handleMoodboardImageSelection = () => {},
+}) => {
   const { user } = useAuth();
   const { primaryFont } = useFont();
   const { updateMessageRating } = useChats();
@@ -25,6 +34,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
     images = null,
     videos = null,
     role,
+    step,
     rating,
     isLoading = false,
     isStreaming = false,
@@ -61,7 +71,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
         alignSelf: isAI ? 'flex-start' : 'flex-end',
         marginLeft: isAI ? 0 : 64,
         marginRight: isAI ? 64 : 0,
-        marginBottom: isAI ? 24 : 4,
+        marginBottom: isAI ? 36 : 4,
       }}
     >
       {isAI ? (
@@ -82,7 +92,7 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
           backgroundColor: isAI ? '#3C3C3C' : '#272727',
         }}
       >
-        {(isLoading && !isStreaming) || (isStreaming && text && text.length === 0) ? (
+        {(isLoading && !isStreaming) || (isStreaming && text.length === 0) ? (
           <Spinner marginTop={0} isGray={true} />
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload
@@ -90,14 +100,35 @@ const Message = ({ message, chatId, isActive = true, handleImageUpload }) => {
             isActive={isAI ? false : isActive}
             chatId={chatId}
             imagesInit={images && images.length > 0 ? images : []}
+            isMoodboard={step && step === STEPS.MOODBOARD}
             onSubmit={(urls) => handleImageUpload(urls)}
+            onSubmitMoodboard={(images) => handleMoodboardImageSelection(images)}
           />
         ) : videos && videos.length > 0 ? (
           <GeneratedVideos chatId={chatId} videos={videos} />
         ) : (
-          <p className="message-text" style={{ color: isAI ? 'white' : 'white' }}>
-            {text}
-          </p>
+          <div className="message-text" style={{ color: isAI ? 'white' : 'white' }}>
+            {!isAI && label && <p className="message-text-label">{label}</p>}
+            <ReactMarkdown
+              components={{
+                ul: ({ node, ...props }) => (
+                  <ul
+                    style={{ paddingInlineStart: '16px', paddingTop: '8px', paddingBottom: '2px' }}
+                    {...props}
+                  />
+                ),
+                ol: ({ node, ...props }) => (
+                  <ol
+                    style={{ paddingInlineStart: '20px', paddingTop: '8px', paddingBottom: '2px' }}
+                    {...props}
+                  />
+                ),
+                li: ({ node, ...props }) => <li style={{ marginBottom: '6px' }} {...props} />,
+              }}
+            >
+              {formatMarkdownNewLines(text)}
+            </ReactMarkdown>
+          </div>
         )}
       </div>
       {isAI && !isLoading && (

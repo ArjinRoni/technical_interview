@@ -6,6 +6,7 @@ const Spinner = ({
   extraStyle = {},
   isGray = false,
   isBlack = false,
+  isDark = false,
 }) => {
   return (
     <div
@@ -15,7 +16,15 @@ const Spinner = ({
         marginTop,
         ...extraStyle,
       }}
-      className={isGray ? 'spinner-gray' : isBlack ? 'spinner-black' : 'spinner-white'}
+      className={
+        isGray
+          ? 'spinner-gray'
+          : isBlack
+            ? 'spinner-black'
+            : isDark
+              ? 'spinner-dark'
+              : 'spinner-white'
+      }
     />
   );
 };

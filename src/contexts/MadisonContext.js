@@ -11,6 +11,7 @@ export const MadisonContext = createContext({
   currentRun: null,
   setCurrentRun: () => {},
   createThread: async () => {},
+  generateImage: async () => {},
   addUserMessageToThread: async () => {},
   createRun: async () => {},
   resumeRun: async () => {},
@@ -50,107 +51,127 @@ export const MadisonProvider = ({ children }) => {
     return thread.id;
   };
 
-  // Function to add user message to the thread
-  const addUserMessageToThread = async ({ message, threadId, onTrainingComplete, onTextDelta }) => {
-    // Append message to the thread
-    await openai.beta.threads.messages.create(threadId, {
-      role: 'user',
-      content: message,
+  // Function to generate an image given an image prompt
+  const generateImage = async (prompt, n = 1, model = 'dall-e-2') => {
+    const response = await openai.images.generate({
+      model,
+      prompt,
+      n,
+      size: model === 'dall-e-2' ? '256x256' : '1024x1024',
+      response_format: 'b64_json',
     });
+
+    const imageBase64 = response.data[0].b64_json;
+    return imageBase64;
+  };
+
+  // Function to add user message to the thread
+  const addUserMessageToThread = async ({
+    message,
+    threadId,
+    onTrainingCalled = async () => {},
+    onMoodboardCalled = async () => {},
+    onTextDelta = () => {},
+    onTextDone = () => {},
+  }) => {
+    // Append message to the thread
+    await openai.beta.threads.messages.create(threadId, { role: 'user', content: message });
+
+    const accumulatedArgs = {};
 
     // Create a new run with streaming
     let run = openai.beta.threads.runs
       .stream(threadId, { assistant_id: assistant.id })
-      .on('textCreated', (text) => console.log('\nassistant > '))
+      .on('textCreated', (text) => null)
       .on('textDelta', (textDelta, snapshot) => onTextDelta(textDelta.value))
-      .on('toolCallCreated', (toolCall) => console.log(`\nassistant > ${toolCall.type}\n\n`))
-      .on('toolCallDelta', (toolCallDelta, snapshot) => {
-        if (toolCallDelta.type === 'code_interpreter') {
-          if (toolCallDelta.code_interpreter.input) {
-            console.log(toolCallDelta.code_interpreter.input);
-          }
-          if (toolCallDelta.code_interpreter.outputs) {
-            console.log('\noutput >\n');
-            toolCallDelta.code_interpreter.outputs.forEach((output) => {
-              if (output.type === 'logs') {
-                console.log(`\n${output.logs}\n`);
-              }
-            });
-          }
+      .on('textDone', (text, snapshot) => onTextDone(text))
+      .on('toolCallCreated', (toolCall) => {
+        accumulatedArgs[toolCall.id] = { name: toolCall.function.name, args: '' };
+      })
+      .on('toolCallDelta', (delta, snapshot) => {
+        if (snapshot.type === 'function' && delta.function.arguments) {
+          accumulatedArgs[snapshot.id].args += delta.function.arguments;
         }
-      });
+      })
+      .on('toolCallDone', async (toolCall) => {
+        // Pass if the tool call type is not a function
+        if (toolCall.type !== 'function') return;
 
-    // Check if the run requires an action
-    run.on('runFinished', async (run) => {
-      if (run.status === 'requires_action') {
-        const requiredAction = run.required_action;
-        if (requiredAction.type === 'submit_tool_outputs') {
-          const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
-          const toolOutputs = [];
+        // Get the name of the function call and the arguments passed
+        const name = accumulatedArgs[toolCall.id].name;
+        const argsString = accumulatedArgs[toolCall.id].args;
+        let args;
+        try {
+          args = JSON.parse(argsString);
+        } catch (error) {
+          console.error('Error parsing function arguments:', error);
+          return; // Skip processing this tool call if we can't parse the arguments
+        }
 
-          for (const toolCall of toolCalls) {
-            if (toolCall.type === 'function') {
-              const functionName = toolCall.function.name;
-              const functionArgs = JSON.parse(toolCall.function.arguments);
+        // Initialize the response to be passed to the stream as the tool output
+        let toolOutput = null;
 
-              if (functionName === 'trigger_training') {
-                const classificationToken = functionArgs.classification_token;
-                console.log(
-                  `Triggering training API with classification token: ${classificationToken}`,
-                );
+        // TRIGGER TRAINING
+        if (name === 'trigger_training') {
+          const { business_description, classification_token, image_urls } = args;
+          console.log(
+            `Triggered training with 
+            business description of "${business_description}" and 
+            classification token of "${classification_token}" with 
+            ${image_urls.length} images.`,
+          );
 
-                // Call the onTrainingComplete callback to initiate the training process
-                const trainingSuccess = await onTrainingComplete(classificationToken);
-                if (trainingSuccess) {
-                  // Training completed successfully
-                  const trainingResponse = {
-                    status: 'success',
-                    message: `Images uploaded successfully for classification token: ${classificationToken}. Training has been completed.`,
-                  };
+          // Call the specified function for handling training
+          const success = await onTrainingCalled(
+            business_description,
+            classification_token,
+            image_urls,
+          );
 
-                  toolOutputs.push({
-                    tool_call_id: toolCall.id,
-                    output: JSON.stringify(trainingResponse),
-                  });
-                } else {
-                  // Training failed or encountered an error
-                  const trainingResponse = {
-                    status: 'error',
-                    message: `Training failed for classification token: ${classificationToken}.`,
-                  };
+          // Determine the tool output based on the response received
+          toolOutput = success ? { status: 'success' } : { status: 'error' };
+        }
 
-                  toolOutputs.push({
-                    tool_call_id: toolCall.id,
-                    output: JSON.stringify(trainingResponse),
-                  });
-                }
-              } else if (functionName === 'trigger_inference') {
-                // For now, let's simulate a successful inference response
-                const inferenceResponse = {
-                  status: 'success',
-                  message: 'Inference process started successfully',
-                };
+        // TRIGGER MOODBOARD
+        if (name === 'trigger_moodboard') {
+          const { image_prompts } = args;
+          console.log(`Triggered moodboard with image prompts of [${image_prompts}].`);
 
-                toolOutputs.push({
-                  tool_call_id: toolCall.id,
-                  output: JSON.stringify(inferenceResponse),
-                });
-              } else {
-                throw new Error(`Unknown function: ${functionName}`);
-              }
-            }
-          }
+          // Call the specified function for handling moodboard
+          const success = await onMoodboardCalled(image_prompts);
 
-          // Submit the tool outputs
-          run = await openai.beta.threads.runs.submitToolOutputs(threadId, run.id, {
+          // Determine the tool output based on the response received
+          toolOutput = success ? { status: 'success' } : { status: 'error' };
+
+          // Get the current run and submit tool outputs
+          const toolOutputs = [{ tool_call_id: toolCall.id, output: JSON.stringify(toolOutput) }];
+          const currentRun = run.currentRun();
+          await openai.beta.threads.runs.submitToolOutputs(threadId, currentRun.id, {
             tool_outputs: toolOutputs,
           });
-        }
-      }
 
-      // TODO:
-      // setCurrentRun(run);
-    });
+          return; // For moodboard only, we return without further streaming
+        }
+
+        // TRIGGER INFERENCE
+        if (name === 'trigger_inference') {
+          toolOutput = { status: 'success' }; // Simulate a successful inference response
+        }
+
+        // Get the current run
+        const currentRun = run.currentRun();
+
+        // Submit tool outputs based on the function called
+        if (currentRun) {
+          const toolOutputs = [{ tool_call_id: toolCall.id, output: JSON.stringify(toolOutput) }];
+
+          // NOTE: We need to stream it here again for it to update the interface
+          openai.beta.threads.runs
+            .submitToolOutputsStream(threadId, currentRun.id, { tool_outputs: toolOutputs })
+            .on('textDelta', (textDelta, snapshot) => onTextDelta(textDelta.value))
+            .on('textDone', (text, snapshot) => onTextDone(text));
+        }
+      });
   };
 
   // Function to create a run
@@ -186,6 +207,7 @@ export const MadisonProvider = ({ children }) => {
         currentRun,
         setCurrentRun,
         createThread,
+        generateImage,
         addUserMessageToThread,
         createRun,
         resumeRun,

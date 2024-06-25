@@ -11,11 +11,21 @@
     padding: 14px 20px 16px 20px;
     border-radius: 12px;
     line-height: 150%;
-    max-width: 80vh;
+    flex: 1;
+    position: relative;
 }
 
 .message-text {
     font-size: 16px;
+}
+
+.message-text-label {
+    text-align: right;
+    margin-top: -4px;
+    margin-bottom: 2px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #757575;
 }
 
 .initials-box {
@@ -39,8 +49,8 @@
 
 .message-actions-box {
     position: absolute;
-    right: 0px;
-    bottom: -20px;
+    right: -4px;
+    bottom: -32px;
     display: flex;
     flex-direction: row;
     border-radius: 8px;

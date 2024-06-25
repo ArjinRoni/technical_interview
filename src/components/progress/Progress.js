@@ -10,6 +10,9 @@ const Progress = ({ step, maxSteps }) => {
   return (
     <div className="progress">
       <div className="progress-bar" style={{ width: `${progressPercentage}%` }}></div>
+      <p>
+        {step}/{maxSteps}
+      </p>
     </div>
   );
 };

@@ -6,10 +6,20 @@ import Spinner from '../spinner/Spinner';
 
 import { useFont } from '@/contexts/FontContext';
 
-const UserInput = ({ userMessage, setUserMessage, onSubmit, isLoading = true, hide = false }) => {
+const UserInput = ({
+  userMessage,
+  setUserMessage,
+  onSubmit,
+  isLoading = true,
+  hide = false,
+  suggestions = null,
+  suggestionsLabel = null,
+}) => {
   const { secondaryFont } = useFont();
-
   const textareaRef = useRef(null);
+
+  // Flag to keep track if there are suggestions
+  const hasSuggestions = suggestions && suggestions.length > 0;
 
   // Hook to dynamically adjust the height of the text area
   useEffect(() => {
@@ -31,6 +41,18 @@ const UserInput = ({ userMessage, setUserMessage, onSubmit, isLoading = true, hi
     onSubmit();
   };
 
+  // Component for suggestions
+  const Suggestion = ({ suggestion }) => {
+    return (
+      <div
+        className="user-input-suggestion"
+        onClick={() => setUserMessage((prevMessage) => prevMessage + ` ${suggestion}`)}
+      >
+        <p>{suggestion}</p>
+      </div>
+    );
+  };
+
   return (
     <>
       <form
@@ -38,6 +60,18 @@ const UserInput = ({ userMessage, setUserMessage, onSubmit, isLoading = true, hi
         onSubmit={onSubmitWithCheck}
         style={{ display: hide ? 'none' : 'flex' }}
       >
+        {hasSuggestions && (
+          <div className="user-input-suggestions-div">
+            {suggestionsLabel && (
+              <div className="user-input-suggestions-label">
+                <p>{suggestionsLabel}</p>
+              </div>
+            )}
+            {suggestions.map((x, index) => (
+              <Suggestion key={index} suggestion={x} />
+            ))}
+          </div>
+        )}
         <textarea
           ref={textareaRef}
           placeholder="Reply to Madison..."
@@ -55,7 +89,7 @@ const UserInput = ({ userMessage, setUserMessage, onSubmit, isLoading = true, hi
             <img className="send-image" src="/send-gradient.png" onClick={onSubmitWithCheck} />
           ))}
       </form>
-      <div className="black-bg-mask" />
+      <div className="black-bg-mask" style={{ height: hasSuggestions ? 138 : 92 }} />
     </>
   );
 };
