@@ -462,9 +462,11 @@ const ChatPage = ({ params }) => {
 
       // Create the message DB object in the backend
       createMessage({ message, chatId: currentChat.id });
+      return true;
     } catch (error) {
       setMessages((prev) => [...removeLoading(prev)]); // Remove the loading message
       console.log('Got error @handleMoodboardCalled: ', error);
+      return false;
     }
   };
 
@@ -490,11 +492,14 @@ const ChatPage = ({ params }) => {
 
       if (response.ok) {
         console.log('Inference initiated with response:', response); // Inference initiated successfully
+        return true;
       } else {
         console.error('Failed to complete inference'); // Handle error case
+        return false;
       }
     } catch (error) {
       console.error('Error triggering inference:', error);
+      return false;
     }
   };
 
