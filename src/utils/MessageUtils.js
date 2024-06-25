@@ -9,4 +9,5 @@ export const MESSAGES = {
   LOADING: { role: 'assistant', isLoading: true },
   USER_LOADING: { role: 'user', isLoading: true },
   STREAMING: { role: 'assistant', isStreaming: true, text: '', isLoading: true },
+  SKELETON: { role: 'assistant', isSkeleton: true },
 };

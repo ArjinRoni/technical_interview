@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import './message.css';
 
 import { formatMarkdownNewLines, getInitials } from '@/utils/StringUtils';
@@ -39,6 +41,7 @@ const Message = ({
     isLoading = false,
     isStreaming = false,
     isImageUpload = false,
+    isSkeleton = false,
   } = message;
   const isAI = role === 'assistant';
 
@@ -92,8 +95,15 @@ const Message = ({
           backgroundColor: isAI ? '#3C3C3C' : '#272727',
         }}
       >
-        {(isLoading && !isStreaming) || (isStreaming && text.length === 0) ? (
+        {(isLoading && !isStreaming) || (isStreaming && text?.length === 0) ? (
           <Spinner marginTop={0} isGray={true} />
+        ) : isSkeleton ? (
+          <SkeletonTheme baseColor="#202020" highlightColor="#444444" width={128} height={128}>
+            <Skeleton count={1} style={{ marginRight: 12 }} />
+            <Skeleton count={1} style={{ marginRight: 12 }} />
+            <Skeleton count={1} style={{ marginRight: 12 }} />
+            <Skeleton count={1} />
+          </SkeletonTheme>
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload
             isAI={isAI}

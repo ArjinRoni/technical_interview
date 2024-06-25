@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
+import { ref, uploadString } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import '../../../styles/chat.css';
 
@@ -73,14 +73,21 @@ const ChatPage = ({ params }) => {
     }
   }, [chats, id]);
 
-  // Hook to poll the database for the last message (i.e., step 8)
+  // If detecting that the advertisements are being generated right now
+  useEffect(() => {
+    currentStep &&
+      currentStep === 9 &&
+      setTimeout(() => setMessages((prev) => [...prev, MESSAGES.SKELETON]), 5000);
+  }, [currentStep]);
+
+  // Hook to poll the database for the last message (i.e., step 10)
   useEffect(() => {
     const loadMessages = async (chat) => {
       const messages_ = await getMessages(chat.id);
       setMessages(messages_);
     };
 
-    if (currentChat && currentStep && currentStep === 7) {
+    if (currentChat && currentStep && currentStep === 9) {
       loadMessages(currentChat);
     }
   }, [currentStep, currentChat]);

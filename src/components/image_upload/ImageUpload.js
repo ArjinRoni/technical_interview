@@ -160,7 +160,7 @@ const ImageUpload = ({
                 />
               ) : (
                 <div className="upload-image-box" onClick={handleClickUpload}>
-                  <img style={{ height: 44, width: 44 }} src="/upload.png" />
+                  <img style={{ height: 56, width: 56 }} src="/upload.png" />
                 </div>
               ))}
             {uploadedImages.length > 0 &&
