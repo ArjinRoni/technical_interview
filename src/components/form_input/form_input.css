@@ -1,0 +1,15 @@
+.form-input-container {
+    position: relative;
+}
+
+.form-input {
+    margin-top: 6px;
+    position: relative;
+    background-color: #222222;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    font-size: 16px;
+    padding: 12px;
+    outline: none;
+}

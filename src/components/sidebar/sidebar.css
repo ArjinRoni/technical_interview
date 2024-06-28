@@ -43,6 +43,11 @@
     align-items: center;
     cursor: pointer;
     gap: 6px;
+    transition: transform 0.1s ease-out;
+}
+
+.sidebar-button:hover {
+    opacity: 0.8;
 }
 
 .sidebar-button-img {

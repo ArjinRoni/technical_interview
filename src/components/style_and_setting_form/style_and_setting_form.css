@@ -1,0 +1,57 @@
+.form-input-suggestions-div {
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+    width: 400px;
+}
+
+.form-input-suggestion {
+    display: flex;
+    background: linear-gradient(to right, #7063c5, #1e1361);
+    padding: 12px 32px 12px 32px;
+    height: 36px;
+    align-items: center;
+    justify-items: center;
+    align-content: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s ease-out;
+}
+
+.form-input-suggestion:hover {
+    opacity: 0.8;
+}
+
+.form-input-suggestion p {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.form-text-label {
+    margin-top: -4px;
+    margin-left: 2px;
+    margin-bottom: 2px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #757575;
+}
+
+.form-continue-button {
+    position: absolute;
+    bottom: -32px;
+    right: 0px;
+    color: #757575;
+    font-style: italic;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.form-continue-button:hover {
+    opacity: 0.8
+}

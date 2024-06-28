@@ -23,7 +23,8 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 12px;
+    row-gap: 24px;
+    column-gap: 16px;
 }
 
 .uploaded-image {
@@ -42,6 +43,11 @@
     width: 128px;
     height: 128px;
     cursor: pointer;
+    transition: transform 0.1s ease-out;
+}
+
+.upload-image-box:hover {
+    opacity: 0.8;
 }
 
 .uploaded-image-wrapper {
@@ -51,8 +57,8 @@
 
 .remove-image-button {
     position: absolute;
-    top: 0px;
-    right: 0px;
+    top: -4px;
+    right: -4px;
     width: 30px;
     height: 30px;
     cursor: pointer;

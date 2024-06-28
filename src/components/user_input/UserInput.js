@@ -6,6 +6,26 @@ import Spinner from '../spinner/Spinner';
 
 import { useFont } from '@/contexts/FontContext';
 
+// Component for suggestions
+const Suggestion = ({ suggestion, setUserMessage }) => {
+  const buttonRef = useRef(null);
+
+  const handleClick = () => {
+    setUserMessage((prev) => (prev && prev.length > 0 ? prev + ', ' + suggestion : suggestion));
+
+    // Trigger the bouncy animation
+    buttonRef.current.style.transform = 'scale(0.8)';
+    setTimeout(() => {
+      buttonRef.current.style.transform = 'scale(1)';
+    }, 100);
+  };
+  return (
+    <div ref={buttonRef} className="user-input-suggestion" onClick={handleClick}>
+      <p>{suggestion}</p>
+    </div>
+  );
+};
+
 const UserInput = ({
   userMessage,
   setUserMessage,
@@ -14,6 +34,7 @@ const UserInput = ({
   hide = false,
   suggestions = null,
   suggestionsLabel = null,
+  height = 60,
 }) => {
   const { secondaryFont } = useFont();
   const textareaRef = useRef(null);
@@ -41,18 +62,6 @@ const UserInput = ({
     onSubmit();
   };
 
-  // Component for suggestions
-  const Suggestion = ({ suggestion }) => {
-    return (
-      <div
-        className="user-input-suggestion"
-        onClick={() => setUserMessage((prevMessage) => prevMessage + ` ${suggestion}`)}
-      >
-        <p>{suggestion}</p>
-      </div>
-    );
-  };
-
   return (
     <>
       <form
@@ -68,14 +77,14 @@ const UserInput = ({
               </div>
             )}
             {suggestions.map((x, index) => (
-              <Suggestion key={index} suggestion={x} />
+              <Suggestion key={index} suggestion={x} setUserMessage={setUserMessage} />
             ))}
           </div>
         )}
         <textarea
           ref={textareaRef}
           placeholder="Reply to Madison..."
-          style={{ fontFamily: secondaryFont.style.fontFamily }}
+          style={{ fontFamily: secondaryFont.style.fontFamily, height }}
           className="user-input"
           value={userMessage}
           onChange={(e) => setUserMessage(e.target.value)}
@@ -89,7 +98,7 @@ const UserInput = ({
             <img className="send-image" src="/send-gradient.png" onClick={onSubmitWithCheck} />
           ))}
       </form>
-      <div className="black-bg-mask" style={{ height: hasSuggestions ? 138 : 92 }} />
+      {!hide && <div className="black-bg-mask" style={{ height: hasSuggestions ? 138 : 92 }} />}
     </>
   );
 };

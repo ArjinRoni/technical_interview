@@ -10,10 +10,10 @@
     transition: transform 0.1s ease-out;
 }
 
-.checkbox-selected {
-    background: linear-gradient(to right, #7063c5, #1e1361);
+.checkbox:hover {
+    background-color: #222222;
 }
 
-.checkbox:active {
-    transform: scale(0.9);
+.checkbox-selected {
+    background: linear-gradient(to right, #7063c5, #1e1361);
 }

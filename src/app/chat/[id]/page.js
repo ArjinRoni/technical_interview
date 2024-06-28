@@ -17,7 +17,13 @@ import { useFB } from '@/contexts/FBContext';
 
 import { processStep, processSuggestions, formatNewLines } from '@/utils/StringUtils';
 import { STEPS } from '@/utils/StepUtil';
-import { removeLoading, MESSAGES } from '@/utils/MessageUtils';
+import {
+  MESSAGES,
+  removeLoading,
+  removeFormInput,
+  isHideUserInput,
+  isMessageLoading,
+} from '@/utils/MessageUtils';
 
 const ChatPage = ({ params }) => {
   // Get the route param -- NOTE: Here it's called `id` but it's actually `chatNo`. We do this to show /1 to the user instead of the long and ugly /<UUID>
@@ -73,13 +79,6 @@ const ChatPage = ({ params }) => {
     }
   }, [chats, id]);
 
-  // If detecting that the advertisements are being generated right now
-  useEffect(() => {
-    currentStep &&
-      currentStep === 9 &&
-      setTimeout(() => setMessages((prev) => [...prev, MESSAGES.SKELETON]), 5000);
-  }, [currentStep]);
-
   // Hook to poll the database for the last message (i.e., step 10)
   useEffect(() => {
     const loadMessages = async (chat) => {
@@ -87,7 +86,7 @@ const ChatPage = ({ params }) => {
       setMessages(messages_);
     };
 
-    if (currentChat && currentStep && currentStep === 9) {
+    if (currentChat && currentStep && (currentStep === 8 || currentStep === 9)) {
       loadMessages(currentChat);
     }
   }, [currentStep, currentChat]);
@@ -124,7 +123,7 @@ const ChatPage = ({ params }) => {
       const { step } = messages.filter((x) => x.role === 'assistant').slice(-1)[0];
       step && setCurrentStep(step);
     }
-  }, [currentChat, messages]);
+  }, [currentChat, hasMessages]); // [currentChat, messages]
 
   const processAssistantMessage = (text, updateStep = true, updateSuggestions = true) => {
     let result = text;
@@ -178,12 +177,24 @@ const ChatPage = ({ params }) => {
       rating: 0,
     };
 
-    // Remove the loading images and the image to update the interface
-    if (step === STEPS.IMAGE_UPLOAD) {
-      setMessages((prev) => [...removeLoading(prev), message, MESSAGES.IMAGE_UPLOAD]);
-    } else {
-      setMessages((prev) => [...removeLoading(prev), message]);
+    // Construct new messages object
+    let messages_ = [message];
+
+    // and the image to update the messages object above
+    if (step === STEPS.CLASSIFICATION_TOKEN) {
+      messages_.push(MESSAGES.CLASSIFICATION_TOKEN);
+    } else if (step === STEPS.IMAGE_UPLOAD) {
+      messages_.push(MESSAGES.IMAGE_UPLOAD);
+    } else if (step === STEPS.TRAINING) {
+      messages_.push(MESSAGES.LOADING);
+    } else if (step === STEPS.STYLE_AND_SETTING) {
+      messages_.push(MESSAGES.STYLE_AND_SETTING);
+    } else if (step === STEPS.INFERENCE || step === STEPS.STORYBOARD) {
+      messages_.push(MESSAGES.SKELETON);
     }
+
+    // Remove the loading images and update the messages state
+    setMessages((prev) => [...removeLoading(prev), ...messages_]);
 
     // Create the message DB object in the backend
     createMessage({ message, chatId: currentChat.id });
@@ -277,9 +288,18 @@ const ChatPage = ({ params }) => {
         (!userMessage || userMessage?.length === 0) &&
         (!messageInit || messageInit?.length === 0)
       ) {
-        toast.error('Please type your message.');
+        toast.error(
+          currentStep === STEPS.CLASSIFICATION_TOKEN
+            ? 'Please enter your classification token to proceed.'
+            : currentStep === STEPS.STYLE_AND_SETTING
+              ? 'Please enter your style and setting preferences to proceed.'
+              : 'Please type your message.',
+        );
         return;
       }
+
+      // Remove user input form messages
+      setMessages((prev) => [...removeFormInput(prev)]);
 
       // Construct the message DB object
       const message = {
@@ -342,7 +362,7 @@ const ChatPage = ({ params }) => {
     businessDescription,
     classificationToken,
     imageUrls,
-    simulate = false,
+    simulate = true,
   ) => {
     try {
       if (simulate) {
@@ -351,7 +371,7 @@ const ChatPage = ({ params }) => {
       }
 
       // Send the request to start the training process
-      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/process`, {
+      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/training`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -395,7 +415,7 @@ const ChatPage = ({ params }) => {
 
     // Add user message to the thread to get assistant response
     addUserMessage({
-      messageInit: `<USER HAS SELECTED MOODBOARD IMAGES: [${[images]}]>`,
+      messageInit: `<USER HAS SELECTED MOODBOARD IMAGES: [${[images]}]>. <PROCEED WITH THE FUNCTION "trigger_inference" NOW>.`,
       updateMessages: false,
       addToDB: false,
     });
@@ -455,7 +475,7 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle inference
-  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = false) => {
+  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = true) => {
     try {
       if (simulate) {
         console.log('Inference simulated.');
@@ -503,6 +523,11 @@ const ChatPage = ({ params }) => {
     if (!step) return label;
 
     if (
+      step === STEPS.BUSINESS_DESCRIPTION &&
+      Math.max(...messages.map((x) => x.step ?? 0)) > STEPS.BUSINESS_DESCRIPTION
+    ) {
+      label = 'Business Description';
+    } else if (
       step === STEPS.CLASSIFICATION_TOKEN &&
       Math.max(...messages.map((x) => x.step ?? 0)) > STEPS.CLASSIFICATION_TOKEN
     ) {
@@ -521,6 +546,26 @@ const ChatPage = ({ params }) => {
 
     return label;
   };
+
+  // Hook to detect when the user has pressed enter
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (
+        event.key === 'Enter' &&
+        (currentStep === STEPS.CLASSIFICATION_TOKEN || currentStep === STEPS.STYLE_AND_SETTING)
+      ) {
+        addUserMessage();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentStep, userMessage]); // Empty dependency array means this effect runs once on mount and cleanup on unmount
 
   return (
     <div className="chat-page">
@@ -562,6 +607,10 @@ const ChatPage = ({ params }) => {
                   label={getLabel(message.step, messages)}
                   chatId={currentChat.id}
                   isActive={index === messages.length - 1}
+                  suggestions={suggestions}
+                  onSubmit={addUserMessage}
+                  userMessage={userMessage}
+                  setUserMessage={setUserMessage}
                   handleImageUpload={(urls) => handleImageUpload(urls)}
                   handleMoodboardImageSelection={(images) => handleMoodboardImageSelection(images)}
                 />
@@ -569,13 +618,13 @@ const ChatPage = ({ params }) => {
           </div>
         )}
         <UserInput
-          hide={hasMessages && messages.slice(-1)[0].isImageUpload === true}
+          hide={hasMessages && isHideUserInput(currentStep)}
           suggestions={suggestions}
           suggestionsLabel={suggestionsLabel}
           userMessage={userMessage}
           setUserMessage={setUserMessage}
           onSubmit={addUserMessage}
-          isLoading={hasMessages && messages.slice(-1)[0].isLoading === true}
+          isLoading={hasMessages && isMessageLoading(messages.slice(-1)[0])}
         />
       </div>
     </div>

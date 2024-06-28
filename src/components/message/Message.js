@@ -11,6 +11,9 @@ import { STEPS } from '@/utils/StepUtil';
 
 import ImageUpload from '../image_upload/ImageUpload';
 import GeneratedVideos from '../generated_videos/GeneratedVideos';
+import StyleAndSettingForm from '../style_and_setting_form/StyleAndSettingForm';
+import ClassificationTokenForm from '../classification_token_form/ClassificationTokenForm';
+import CountdownProgressTimer from '../countdown_progress_timer/CountdownProgressTimer';
 import Spinner from '../spinner/Spinner';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,8 +25,12 @@ const Message = ({
   chatId,
   isActive = true,
   label = null,
+  suggestions = null,
   handleImageUpload = () => {},
   handleMoodboardImageSelection = () => {},
+  onSubmit = () => {},
+  userMessage = '',
+  setUserMessage = () => {},
 }) => {
   const { user } = useAuth();
   const { primaryFont } = useFont();
@@ -42,6 +49,8 @@ const Message = ({
     isStreaming = false,
     isImageUpload = false,
     isSkeleton = false,
+    isStyleAndSetting = false,
+    isClassificationToken = false,
   } = message;
   const isAI = role === 'assistant';
 
@@ -92,18 +101,27 @@ const Message = ({
       <div
         className="message"
         style={{
-          backgroundColor: isAI ? '#3C3C3C' : '#272727',
+          backgroundColor: isAI
+            ? '#3C3C3C'
+            : isClassificationToken || isStyleAndSetting
+              ? '#3B3B3B'
+              : '#272727',
         }}
       >
         {(isLoading && !isStreaming) || (isStreaming && text?.length === 0) ? (
           <Spinner marginTop={0} isGray={true} />
         ) : isSkeleton ? (
-          <SkeletonTheme baseColor="#202020" highlightColor="#444444" width={128} height={128}>
-            <Skeleton count={1} style={{ marginRight: 12 }} />
-            <Skeleton count={1} style={{ marginRight: 12 }} />
-            <Skeleton count={1} style={{ marginRight: 12 }} />
-            <Skeleton count={1} />
-          </SkeletonTheme>
+          <div>
+            <div style={{ display: 'flex' }}>
+              <SkeletonTheme baseColor="#202020" highlightColor="#444444" width={128} height={128}>
+                <Skeleton count={1} style={{ marginRight: 12 }} />
+                <Skeleton count={1} style={{ marginRight: 12 }} />
+                <Skeleton count={1} style={{ marginRight: 12 }} />
+                <Skeleton count={1} />
+              </SkeletonTheme>
+            </div>
+            <CountdownProgressTimer minutes={15} />
+          </div>
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload
             isAI={isAI}
@@ -119,25 +137,49 @@ const Message = ({
         ) : (
           <div className="message-text" style={{ color: isAI ? 'white' : 'white' }}>
             {!isAI && label && <p className="message-text-label">{label}</p>}
-            <ReactMarkdown
-              components={{
-                ul: ({ node, ...props }) => (
-                  <ul
-                    style={{ paddingInlineStart: '16px', paddingTop: '8px', paddingBottom: '2px' }}
-                    {...props}
-                  />
-                ),
-                ol: ({ node, ...props }) => (
-                  <ol
-                    style={{ paddingInlineStart: '20px', paddingTop: '8px', paddingBottom: '2px' }}
-                    {...props}
-                  />
-                ),
-                li: ({ node, ...props }) => <li style={{ marginBottom: '6px' }} {...props} />,
-              }}
-            >
-              {formatMarkdownNewLines(text?.trim())}
-            </ReactMarkdown>
+            {isClassificationToken ? (
+              <ClassificationTokenForm
+                suggestions={suggestions}
+                userMessage={userMessage}
+                setUserMessage={setUserMessage}
+                onSubmit={onSubmit}
+              />
+            ) : isStyleAndSetting ? (
+              <StyleAndSettingForm
+                suggestions={suggestions}
+                userMessage={userMessage}
+                setUserMessage={setUserMessage}
+                onSubmit={onSubmit}
+              />
+            ) : (
+              <ReactMarkdown
+                components={{
+                  ul: ({ node, ...props }) => (
+                    <ul
+                      style={{
+                        paddingInlineStart: '16px',
+                        paddingTop: '8px',
+                        paddingBottom: '2px',
+                      }}
+                      {...props}
+                    />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol
+                      style={{
+                        paddingInlineStart: '20px',
+                        paddingTop: '8px',
+                        paddingBottom: '2px',
+                      }}
+                      {...props}
+                    />
+                  ),
+                  li: ({ node, ...props }) => <li style={{ marginBottom: '6px' }} {...props} />,
+                }}
+              >
+                {formatMarkdownNewLines(text?.trim())}
+              </ReactMarkdown>
+            )}
           </div>
         )}
       </div>

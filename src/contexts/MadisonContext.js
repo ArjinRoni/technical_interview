@@ -111,6 +111,7 @@ export const MadisonProvider = ({ children }) => {
 
         // Initialize the response to be passed to the stream as the tool output
         let toolOutput = null;
+        let skipText = false;
 
         // TRIGGER TRAINING
         if (name === 'trigger_training') {
@@ -143,6 +144,7 @@ export const MadisonProvider = ({ children }) => {
 
           // Determine the tool output based on the response received
           toolOutput = success ? { status: 'success' } : { status: 'error' };
+          skipText = true;
         }
 
         // TRIGGER INFERENCE
@@ -171,8 +173,8 @@ export const MadisonProvider = ({ children }) => {
           // NOTE: We need to stream it here again for it to update the interface
           openai.beta.threads.runs
             .submitToolOutputsStream(threadId, currentRun.id, { tool_outputs: toolOutputs })
-            .on('textDelta', (textDelta, snapshot) => onTextDelta(textDelta.value))
-            .on('textDone', (text, snapshot) => onTextDone(text));
+            .on('textDelta', (textDelta, snapshot) => !skipText && onTextDelta(textDelta.value))
+            .on('textDone', (text, snapshot) => !skipText && onTextDone(text));
         }
       });
   };

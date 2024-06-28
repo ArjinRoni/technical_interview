@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 import Chat from '../chat/Chat';
@@ -12,6 +12,33 @@ import { useMadison } from '@/contexts/MadisonContext';
 import { useUI } from '@/contexts/UIContext';
 
 import './sidebar.css';
+
+const SidebarButton = ({ src, text, onClick = () => {} }) => {
+  const buttonRef = useRef(null);
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+
+    // Trigger the bouncy animation
+    if (buttonRef.current) {
+      buttonRef.current.style.transform = 'scale(0.8)';
+    }
+    setTimeout(() => {
+      if (buttonRef.current) {
+        buttonRef.current.style.transform = 'scale(1)';
+      }
+    }, 100);
+  };
+
+  return (
+    <div ref={buttonRef} className="sidebar-button" onClick={handleClick}>
+      <img className="sidebar-button-img" src={src} />
+      <p className="sidebar-button-text">{text}</p>
+    </div>
+  );
+};
 
 const Sidebar = () => {
   const router = useRouter();
@@ -35,15 +62,6 @@ const Sidebar = () => {
     router.push(`/chat/${chatNo}`);
 
     setIsLoading(false);
-  };
-
-  const SidebarButton = ({ src, text, onClick }) => {
-    return (
-      <div className="sidebar-button" onClick={onClick}>
-        <img className="sidebar-button-img" src={src} />
-        <p className="sidebar-button-text">{text}</p>
-      </div>
-    );
   };
 
   return (

@@ -27,15 +27,19 @@ const ImageUpload = ({
   const { storage } = useFB();
 
   const fileInputRef = useRef(null);
+  const buttonRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [uploadedImages, setUploadedImages] = useState(isAI ? [] : imagesInit);
+  const [loadedImages, setLoadedImages] = useState({});
   const [selectedImages, setSelectedImages] = useState(isMoodboard ? selectedImagesInit : null); // Selected images for the moodboard
   const [showMoodboardSubmitButton, setShowSubmitMoodboardButton] = useState(isMoodboard);
 
   useEffect(() => {
     const generateSignedUrls = async (images) => {
+      setUploading(true);
       let signedUrls = [];
+
       for (const image of images) {
         try {
           let storageFilepath = null;
@@ -55,6 +59,7 @@ const ImageUpload = ({
       }
 
       setUploadedImages(signedUrls);
+      setTimeout(() => setUploading(false), 500);
     };
 
     if (isAI && imagesInit && imagesInit.length > 0) {
@@ -95,6 +100,12 @@ const ImageUpload = ({
   // Function to pop-up file picker
   const handleClickUpload = () => {
     fileInputRef.current.click();
+
+    // Trigger the bouncy animation
+    buttonRef.current.style.transform = 'scale(0.8)';
+    setTimeout(() => {
+      buttonRef.current.style.transform = 'scale(1)';
+    }, 100);
   };
 
   // Function to handle discarding images
@@ -133,7 +144,7 @@ const ImageUpload = ({
           {isAI
             ? isMoodboard
               ? showMoodboardSubmitButton
-                ? 'Please select the images you like below or skip if you wish.'
+                ? `Here is your moodboard, ${user?.name?.split(' ')[0].trim()}! Please select the images you like.`
                 : 'Thank you for your selection!'
               : `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
             : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸'])}`}
@@ -149,7 +160,7 @@ const ImageUpload = ({
               style={{ display: 'none' }}
             />
           )}
-          <div className="uploaded-images-div">
+          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 464 : 572 }}>
             {isActive &&
               (uploading ? (
                 <Spinner
@@ -159,11 +170,12 @@ const ImageUpload = ({
                   isDark={true}
                 />
               ) : (
-                <div className="upload-image-box" onClick={handleClickUpload}>
+                <div ref={buttonRef} className="upload-image-box" onClick={handleClickUpload}>
                   <img style={{ height: 56, width: 56 }} src="/upload.png" />
                 </div>
               ))}
-            {uploadedImages.length > 0 &&
+            {!uploading &&
+              uploadedImages.length > 0 &&
               uploadedImages.map((url, index) => (
                 <div
                   key={index}
@@ -171,7 +183,7 @@ const ImageUpload = ({
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  {isMoodboard && (
+                  {isMoodboard && loadedImages[url] && (
                     <Checkbox
                       isSelectedInit={selectedImagesInit?.includes(url)}
                       onPress={() => setSelectedImages((prev) => [...prev, url])}
@@ -186,6 +198,7 @@ const ImageUpload = ({
                     sizes="100vw"
                     style={{ width: 'auto', height: 128 }} // optional
                     src={url}
+                    onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />
                   {hoveredIndex === index && isActive && (
                     <img
@@ -198,7 +211,7 @@ const ImageUpload = ({
               ))}
           </div>
         </div>
-        {isActive && uploadedImages && uploadedImages.length > 0 && (
+        {isActive && !uploading && uploadedImages && uploadedImages.length > 0 && (
           <div className="image-upload-button-div">
             <Button
               text="Next"

@@ -13,7 +13,8 @@
 
 .user-input {
     flex: 1;
-    height: 48px;
+    height: 64px;
+    min-height: 64px;
     padding-top: 20px;
     padding-bottom: 20px;
     padding-left: 16px;
@@ -40,12 +41,16 @@
 
 .send-image {
     position: absolute;
-    top: 15.5px;
-    right: 16px;
+    top: 14px;
+    right: 14px;
     background: none;
     width: 32x;
     height: 32px;
     cursor: pointer;
+}
+
+.send-image:hover {
+    opacity: 0.8;
 }
 
 .user-input-suggestions-div {
@@ -68,6 +73,11 @@
     justify-content: center;
     border-radius: 12px;
     cursor: pointer;
+    transition: transform 0.1s ease-out;
+}
+
+.user-input-suggestion:hover {
+    opacity: 0.8;
 }
 
 .user-input-suggestion p {

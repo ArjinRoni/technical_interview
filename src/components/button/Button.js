@@ -1,3 +1,5 @@
+'use client';
+import React, { useRef } from 'react';
 import './button.css';
 
 const Button = ({
@@ -11,12 +13,31 @@ const Button = ({
   emoji = null,
   onClick = null,
 }) => {
+  const ref = useRef(null);
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+
+    // Trigger the bouncy animation
+    if (ref?.current) {
+      ref.current.style.transform = 'scale(0.9)';
+    }
+    setTimeout(() => {
+      if (ref?.current) {
+        ref.current.style.transform = 'scale(1)';
+      }
+    }, 150);
+  };
+
   return (
     <button
+      ref={ref}
       style={{ alignSelf, borderRadius, width, marginTop }}
       className="button"
       type={type}
-      onClick={onClick ? onClick : null}
+      onClick={handleClick}
     >
       <p style={{ fontSize, color: 'white', alignSelf: 'center', margin: 0 }}>{text}</p>
       {emoji && (
