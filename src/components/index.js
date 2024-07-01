@@ -22,3 +22,4 @@ export { default as StyleAndSettingForm } from './style_and_setting_form/StyleAn
 export { default as ClassificationTokenForm } from './classification_token_form/ClassificationTokenForm';
 export { default as FormInput } from './form_input/FormInput';
 export { default as CountdownProgressTimer } from './countdown_progress_timer/CountdownProgressTimer';
+export { default as Storyboard } from './storyboard/Storyboard';

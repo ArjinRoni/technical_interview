@@ -10,6 +10,7 @@ import { formatMarkdownNewLines, getInitials } from '@/utils/StringUtils';
 import { STEPS } from '@/utils/StepUtil';
 
 import ImageUpload from '../image_upload/ImageUpload';
+import Storyboard from '../storyboard/Storyboard';
 import GeneratedVideos from '../generated_videos/GeneratedVideos';
 import StyleAndSettingForm from '../style_and_setting_form/StyleAndSettingForm';
 import ClassificationTokenForm from '../classification_token_form/ClassificationTokenForm';
@@ -26,10 +27,12 @@ const Message = ({
   isActive = true,
   label = null,
   suggestions = null,
+  userMessage = '',
+  imagePrompts = [],
+  moodboardPrompts = [],
   handleImageUpload = () => {},
   handleMoodboardImageSelection = () => {},
   onSubmit = () => {},
-  userMessage = '',
   setUserMessage = () => {},
 }) => {
   const { user } = useAuth();
@@ -41,6 +44,7 @@ const Message = ({
     id,
     text,
     images = null,
+    shots = {},
     videos = null,
     role,
     step,
@@ -53,6 +57,8 @@ const Message = ({
     isClassificationToken = false,
   } = message;
   const isAI = role === 'assistant';
+
+  console.log('Got step: ', step, shots);
 
   // State to manage the rating locally
   const [localRating, setLocalRating] = useState(rating);
@@ -113,7 +119,7 @@ const Message = ({
         ) : isSkeleton ? (
           <div>
             <div style={{ display: 'flex' }}>
-              <SkeletonTheme baseColor="#202020" highlightColor="#444444" width={128} height={128}>
+              <SkeletonTheme baseColor="#202020" highlightColor="#444444" width={164} height={164}>
                 <Skeleton count={1} style={{ marginRight: 12 }} />
                 <Skeleton count={1} style={{ marginRight: 12 }} />
                 <Skeleton count={1} style={{ marginRight: 12 }} />
@@ -122,13 +128,21 @@ const Message = ({
             </div>
             <CountdownProgressTimer minutes={15} />
           </div>
+        ) : step && step === STEPS.STORYBOARD ? (
+          <Storyboard
+            isActive={isActive}
+            chatId={chatId}
+            shotsInit={shots}
+            onSubmit={(urls) => handleImageUpload(urls)}
+          />
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload
             isAI={isAI}
-            isActive={isAI ? false : isActive}
+            isActive={isActive}
             chatId={chatId}
             imagesInit={images && images.length > 0 ? images : []}
             isMoodboard={step && step === STEPS.MOODBOARD}
+            moodboardPrompts={moodboardPrompts}
             onSubmit={(urls) => handleImageUpload(urls)}
             onSubmitMoodboard={(images) => handleMoodboardImageSelection(images)}
           />

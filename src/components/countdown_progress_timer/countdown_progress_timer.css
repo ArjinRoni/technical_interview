@@ -1,19 +1,22 @@
 .countdown-timer {
-    margin-top: 12px;
+    margin-top: 24px;
+    margin-bottom: 4px;
+    padding-left: 1px;
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 16px;
-    border-radius: 8px;
+    justify-content: flex-start;
+    box-shadow: none;
 }
 
 .countdown-progress {
+    margin: 0;
     width: 65%;
     height: 8px;
     background-color: #e0e0e0;
     border-radius: 12px;
     overflow: hidden;
-    margin-right: 12px;
+    margin-right: 16px;
 }
 
 .countdown-progress-bar {
@@ -25,7 +28,7 @@
 
 .countdown-timer p {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 400;
     text-align: center;
     margin: 0;
 }

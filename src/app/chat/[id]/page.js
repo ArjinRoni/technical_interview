@@ -23,46 +23,146 @@ import {
   removeFormInput,
   isHideUserInput,
   isMessageLoading,
+  finalStepsIdentifierText,
+  transformToShots,
 } from '@/utils/MessageUtils';
 
 const ChatPage = ({ params }) => {
   // Get the route param -- NOTE: Here it's called `id` but it's actually `chatNo`. We do this to show /1 to the user instead of the long and ugly /<UUID>
   const { id } = params;
 
+  // Hooks
   const router = useRouter();
   const { user } = useAuth();
   const { isSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
-  const { openai, currentRun, generateImage, addUserMessageToThread, resumeRun } = useMadison();
-  const { chats, updateChat, getChatDetails, createMessage, getMessages, deleteChat } = useChats();
+  const { openai, currentRun, generateImage, addUserMessageToThread } = useMadison();
+  const {
+    chats,
+    updateChat,
+    getChatDetails,
+    createMessage,
+    getMessages,
+    updateMessage,
+    deleteChat,
+  } = useChats();
   const { storage } = useFB();
   const { primaryFont } = useFont();
   const messagesContainerRef = useRef(null);
 
+  // Chat interface states
   const [streamedMessage, setStreamedMessage] = useState('');
   const [currentChat, setCurrentChat] = useState(null);
-  const [classificationToken, setClassificationToken] = useState(null);
   const [suggestionsLabel, setSuggestionsLabel] = useState(null);
   const [suggestions, setSuggestions] = useState(null);
   const [userMessage, setUserMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [currentStep, setCurrentStep] = useState(null);
 
-  // Const to track if the current chat has messages
+  // Ad-generation related states (TODO: Currently not utilized fully)
+  const [classificationToken, setClassificationToken] = useState(null);
+  const [moodboardPrompts, setMoodboardPrompts] = useState(null);
+  const [imagePrompts, setImagePrompts] = useState(null);
+
+  // Variable to track if the current chat has messages
   const hasMessages = messages && messages.length > 0;
 
-  // Hook to get and set the current chat based on the chat no
+  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
+  const isSimulateStoryboard = false; // Set to true to simulate storyboard
+  useEffect(() => {
+    const simulateStoryboard = async () => {
+      console.log('Simulating storyboard...');
+
+      // Generate the image URLs for the moodboard
+      const prompts = ['deer', 'car', 'woman', 'bicycle'];
+      let images = await generateImagesParallel(prompts);
+
+      const uploadPromises = Array.from(images).map(async ({ prompt, base64 }, index) => {
+        const chatId = currentChat.id;
+        const storageFilepath = `users/${user.userId}/${chatId}/output/${index}.png`;
+        const storageRef = ref(storage, storageFilepath);
+        await uploadString(storageRef, base64, 'base64');
+        return storageFilepath;
+      });
+
+      const imageStorageFilepaths = await Promise.all(uploadPromises);
+
+      // Generate shots
+      const shots = transformToShots(prompts, imageStorageFilepaths);
+
+      // Construct the message DB object
+      const message = {
+        id: uuidv4(),
+        role: 'assistant',
+        text: null,
+        shots: shots,
+        step: STEPS.STORYBOARD,
+        rating: 0,
+      };
+
+      // Remove the loading messages and add the message with images to update the interface
+      setMessages((prev) => [...removeLoading(prev), message]);
+
+      // Create the message DB object in the backend
+      createMessage({ message, chatId: currentChat.id });
+    };
+
+    isSimulateStoryboard && setTimeout(() => simulateStoryboard(), 5000);
+  }, [isSimulateStoryboard]);
+  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
+
+  // Hook to get and set the current chat based on the chat no (refresh)
   useEffect(() => {
     const loadMessages = async (chat) => {
       const messages_ = await getMessages(chat.id);
 
       // If the last message on the chat was from user OR if it's step 3 image upload, we re-run the assistant on the thread
       const lastMessage = messages_.slice(-1)[0];
-      if (lastMessage?.role === 'user' || lastMessage?.step === STEPS.IMAGE_UPLOAD) {
-        resumeRun(chat.threadId);
-        setMessages([...messages_, { step: currentStep, isLoading: true }]);
-      } else {
-        setMessages(messages_);
+      if (!lastMessage) return;
+
+      // Get role, step, and suggestions from the last message
+      const { role, step, suggestions: suggestions_ } = lastMessage;
+
+      // Construct the new messages object
+      const messages__ = [...messages_];
+
+      // Push a new message based on the step
+      if (step === STEPS.CLASSIFICATION_TOKEN) {
+        messages__.push(MESSAGES.CLASSIFICATION_TOKEN);
+      } else if (step === STEPS.IMAGE_UPLOAD) {
+        messages__.push(MESSAGES.IMAGE_UPLOAD);
+      } else if (step === STEPS.TRAINING) {
+        messages__.push(MESSAGES.LOADING);
+      } else if (step === STEPS.STYLE_AND_SETTING) {
+        messages__.push(MESSAGES.STYLE_AND_SETTING);
+      } else if (step === STEPS.INFERENCE || step === STEPS.STORYBOARD) {
+        messages__.push(MESSAGES.SKELETON);
+      } else if (role === 'user') {
+        messages__.push(MESSAGES.LOADING);
       }
+
+      // Update the suggestions if applicable
+      if (suggestions_ && suggestions_.length > 0) {
+        setSuggestions(suggestions_);
+        if (step === STEPS.TARGET_AUDIENCE) {
+          setSuggestionsLabel('Select or type your target audience');
+        }
+      }
+
+      // Update the current step
+      setCurrentStep(step);
+
+      // Update the messages state
+      setMessages(messages__);
+
+      // Get and set chat details
+      const {
+        classificationToken: classificationToken_,
+        imagePrompts: imagePrompts_,
+        moodboardPrompts: moodboardPrompts_,
+      } = await getChatDetails(chat.id);
+      classificationToken_ && setClassificationToken(classificationToken_);
+      moodboardPrompts_ && setMoodboardPrompts(moodboardPrompts_);
+      imagePrompts_ && setImagePrompts(imagePrompts_);
     };
 
     try {
@@ -78,6 +178,21 @@ const ChatPage = ({ params }) => {
       console.log('Got error fetching the chat: ', error);
     }
   }, [chats, id]);
+
+  // Hook to add a skeleton loader at the end if one does not exist
+  useEffect(() => {
+    if (messages && messages.length > 0 && currentStep && currentStep >= STEPS.MOODBOARD) {
+      const lastMessage = messages.slice(-1)[0];
+      if (!lastMessage) return;
+
+      if (
+        !lastMessage.isSkeleton &&
+        (currentStep >= STEPS.INFERENCE || lastMessage.text?.includes(finalStepsIdentifierText))
+      ) {
+        setMessages((prev) => [...prev, MESSAGES.SKELETON]);
+      }
+    }
+  }, [messages, currentStep]);
 
   // Hook to poll the database for the last message (i.e., step 10)
   useEffect(() => {
@@ -123,7 +238,7 @@ const ChatPage = ({ params }) => {
       const { step } = messages.filter((x) => x.role === 'assistant').slice(-1)[0];
       step && setCurrentStep(step);
     }
-  }, [currentChat, hasMessages]); // [currentChat, messages]
+  }, [currentChat, hasMessages]);
 
   const processAssistantMessage = (text, updateStep = true, updateSuggestions = true) => {
     let result = text;
@@ -138,13 +253,10 @@ const ChatPage = ({ params }) => {
       // Process suggestions
       const { suggestions: suggestions_, text: result__ } = processSuggestions(result);
       if (updateSuggestions && suggestions_ && suggestions_.length > 0) {
-        if (step && step === STEPS.CLASSIFICATION_TOKEN) {
-          setSuggestionsLabel('Select or type your classification token');
-        } else if (step && step === STEPS.TARGET_AUDIENCE) {
+        if (step && step === STEPS.TARGET_AUDIENCE) {
           setSuggestionsLabel('Select or type your target audience');
-        } else if (step && step === STEPS.STYLE_AND_SETTING) {
-          setSuggestionsLabel('Select or type your style and setting');
         }
+
         setSuggestions(suggestions_);
       }
       result = result__;
@@ -153,19 +265,20 @@ const ChatPage = ({ params }) => {
       result = formatNewLines(result);
 
       return {
-        result,
+        result: result?.trim(), // Remove whitespaces from both ends of the string
         step: updateStep && step && step > 0 && currentStep !== step ? step : currentStep,
+        suggestions: suggestions_,
       };
     } catch (error) {
       console.log('Got error @processAssistantMessage: ', error);
       result = text;
-      return { result, step: currentStep };
+      return { result, step: currentStep, suggestions: suggestions };
     }
   };
 
   // Function to handle assistant response done
   const handleTextDone = async (text) => {
-    let { result, step } = processAssistantMessage(text?.value);
+    let { result, step, suggestions: suggestions_ } = processAssistantMessage(text?.value);
 
     // Construct the message DB object
     const message = {
@@ -175,12 +288,13 @@ const ChatPage = ({ params }) => {
       images: null,
       step,
       rating: 0,
+      suggestions: suggestions_,
     };
 
     // Construct new messages object
     let messages_ = [message];
 
-    // and the image to update the messages object above
+    // Push the next message to the list depending on the step
     if (step === STEPS.CLASSIFICATION_TOKEN) {
       messages_.push(MESSAGES.CLASSIFICATION_TOKEN);
     } else if (step === STEPS.IMAGE_UPLOAD) {
@@ -189,7 +303,11 @@ const ChatPage = ({ params }) => {
       messages_.push(MESSAGES.LOADING);
     } else if (step === STEPS.STYLE_AND_SETTING) {
       messages_.push(MESSAGES.STYLE_AND_SETTING);
-    } else if (step === STEPS.INFERENCE || step === STEPS.STORYBOARD) {
+    } else if (
+      step === STEPS.INFERENCE ||
+      step === STEPS.STORYBOARD ||
+      (step === STEPS.MOODBOARD && result?.includes(finalStepsIdentifierText))
+    ) {
       messages_.push(MESSAGES.SKELETON);
     }
 
@@ -197,7 +315,7 @@ const ChatPage = ({ params }) => {
     setMessages((prev) => [...removeLoading(prev), ...messages_]);
 
     // Create the message DB object in the backend
-    createMessage({ message, chatId: currentChat.id });
+    createMessage({ message: message, chatId: currentChat.id });
   };
 
   // Function to handle text delta
@@ -208,14 +326,15 @@ const ChatPage = ({ params }) => {
     });
   };
 
-  // Main function to check for messages in the current chat
-  const checkForMessages = async (run) => {
+  // Main function to check for messages in the current chat (NOTE: This is currently only used for the first message...)
+  const checkForMessages = async () => {
     try {
       // Get the thread ID from the current chat
       const threadId = currentChat.threadId;
 
       // Get messages in thread and update UI and DB accordingly
       const openaiMessages = await openai.beta.threads.messages.list(threadId);
+
       for (const openaiMessage of openaiMessages.data.reverse()) {
         // Get role, text, and step
         const role = openaiMessage.role;
@@ -242,34 +361,8 @@ const ChatPage = ({ params }) => {
           rating: 0,
         };
 
-        // If the message is unique, update messages and write to DB
-        if (!messages.some((m) => m.text === message.text)) {
-          setMessages((prevMessages) => [...prevMessages.filter((x) => !x.isLoading), message]); // NOTE: We remove the loading messages here
-          createMessage({ message, chatId: currentChat.id });
-        }
-      }
-
-      // If the run requires an action, execut the action accordingly
-      if (run.status === 'requires_action') {
-        const requiredAction = run.required_action;
-        if (requiredAction.type === 'submit_tool_outputs') {
-          const toolCalls = requiredAction.submit_tool_outputs.tool_calls;
-          for (const toolCall of toolCalls) {
-            if (toolCall.function && toolCall.function.name === 'trigger_training') {
-              const classificationToken = JSON.parse(
-                toolCall.function.arguments,
-              ).classification_token;
-              setClassificationToken(classificationToken);
-              await updateChat(currentChat.id, { classificationToken });
-              setMessages((prevMessages) => [...prevMessages, { isImageUpload: true }]);
-              break; // Exit the loop after finding the trigger_training function
-            } else if (toolCall.function && toolCall.function.name === 'trigger_inference') {
-              const imagePrompts = JSON.parse(toolCall.function.arguments).image_prompts;
-              const { classificationToken: token } = await getChatDetails(currentChat.id);
-              await handleInference(imagePrompts, token);
-            }
-          }
-        }
+        setMessages((prevMessages) => [...prevMessages.filter((x) => !x.isLoading), message]); // NOTE: We remove the loading messages here
+        createMessage({ message, chatId: currentChat.id });
       }
     } catch (error) {
       console.log('Got error @checkForMessages: ', error);
@@ -278,7 +371,7 @@ const ChatPage = ({ params }) => {
 
   // Hook to check for messages from the assistant
   useEffect(() => {
-    currentChat && currentRun && checkForMessages(currentRun);
+    currentChat && currentRun && checkForMessages();
   }, [currentChat, currentRun]);
 
   // Function to add a message to the chat from the user
@@ -365,6 +458,12 @@ const ChatPage = ({ params }) => {
     simulate = true,
   ) => {
     try {
+      // Set classification token
+      setClassificationToken(classificationToken);
+
+      // Update the chat properties
+      await updateChat(currentChat.id, { classificationToken });
+
       if (simulate) {
         console.log('Training simulated.');
         return true;
@@ -401,17 +500,8 @@ const ChatPage = ({ params }) => {
 
   // Function to handle moodboard image selection
   const handleMoodboardImageSelection = async (images) => {
-    const message = {
-      id: uuidv4(),
-      role: 'user',
-      text: null,
-      images,
-      step: currentStep,
-      rating: 0,
-    };
-
-    // Create the message on the DB
-    createMessage({ message, chatId: currentChat.id });
+    // Update the moodboard message
+    updateMessage(currentChat.id, messages.slice(-1)[0].id, { images });
 
     // Add user message to the thread to get assistant response
     addUserMessage({
@@ -434,6 +524,12 @@ const ChatPage = ({ params }) => {
   // Function to handle moodboard
   const handleMoodboardCalled = async (imagePrompts) => {
     try {
+      // Set moodboard propmts state
+      setMoodboardPrompts(imagePrompts);
+
+      // Update the chat properties
+      await updateChat(currentChat.id, { moodboardPrompts: imagePrompts });
+
       // Add a loading message
       setMessages((prev) => [...removeLoading(prev), MESSAGES.LOADING]);
 
@@ -477,12 +573,19 @@ const ChatPage = ({ params }) => {
   // Function to handle inference
   const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = true) => {
     try {
+      // Set the image prompts and the classification token
+      setImagePrompts(imagePrompts);
+      setClassificationToken(classificationToken);
+
+      // Update the chat properties
+      await updateChat(currentChat.id, { imagePrompts, classificationToken });
+
       if (simulate) {
         console.log('Inference simulated.');
         return true;
       }
 
-      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/inference`, {
+      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/image_generation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -572,28 +675,30 @@ const ChatPage = ({ params }) => {
       <Sidebar />
       <Glow />
       <div className="chat-panel" style={{ marginLeft: isSidebarOpen ? 216 : 0 }}>
-        <div className="chat-header">
-          <img
-            style={{
-              cursor: 'pointer',
-              position: 'absolute',
-              left: isSidebarOpen ? 64 : 48,
-              width: 32,
-              height: 32,
-            }}
-            src="/back-gradient.png"
-            onClick={() => router.push('/dashboard')}
-          />
-          <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
-            {currentChat?.title}
-          </p>
-          {hasMessages && <Progress step={currentStep} maxSteps={10} />}
-          <img
-            style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
-            src="/delete.png"
-            onClick={deleteChatAndNavigateBack}
-          />
-        </div>
+        {hasMessages && (
+          <div className="chat-header">
+            <img
+              style={{
+                cursor: 'pointer',
+                position: 'absolute',
+                left: isSidebarOpen ? 64 : 48,
+                width: 32,
+                height: 32,
+              }}
+              src="/back-gradient.png"
+              onClick={() => router.push('/dashboard')}
+            />
+            <p className="chat-title-large" style={{ fontFamily: primaryFont.style.fontFamily }}>
+              {currentChat?.title}
+            </p>
+            {hasMessages && <Progress step={currentStep} maxSteps={10} />}
+            <img
+              style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
+              src="/delete.png"
+              onClick={deleteChatAndNavigateBack}
+            />
+          </div>
+        )}
         {hasMessages && (
           <div className="messages-scrollview" ref={messagesContainerRef}>
             {currentChat &&
@@ -613,6 +718,8 @@ const ChatPage = ({ params }) => {
                   setUserMessage={setUserMessage}
                   handleImageUpload={(urls) => handleImageUpload(urls)}
                   handleMoodboardImageSelection={(images) => handleMoodboardImageSelection(images)}
+                  imagePrompts={message.step === STEPS.STORYBOARD ? imagePrompts : null}
+                  moodboardPrompts={message.step === STEPS.MOODBOARD ? moodboardPrompts : null}
                 />
               ))}
           </div>

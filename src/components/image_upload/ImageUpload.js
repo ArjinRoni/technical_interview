@@ -13,6 +13,8 @@ import Checkbox from '../checkbox/Checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
 
+import { generateSignedUrls } from '@/utils/MediaUtils';
+
 const ImageUpload = ({
   isAI = false,
   isActive = true,
@@ -33,37 +35,22 @@ const ImageUpload = ({
   const [uploadedImages, setUploadedImages] = useState(isAI ? [] : imagesInit);
   const [loadedImages, setLoadedImages] = useState({});
   const [selectedImages, setSelectedImages] = useState(isMoodboard ? selectedImagesInit : null); // Selected images for the moodboard
-  const [showMoodboardSubmitButton, setShowSubmitMoodboardButton] = useState(isMoodboard);
+  const [showMoodboardSubmit, setShowMoodboardSubmit] = useState(isMoodboard && isActive);
+
+  // Set which images to use for displaying to the user
+  const usedImages = isActive || !isMoodboard ? uploadedImages : selectedImages;
+
+  // Limit for image upload
+  const MIN_IMAGES_REQUIRED = 3;
 
   useEffect(() => {
-    const generateSignedUrls = async (images) => {
-      setUploading(true);
-      let signedUrls = [];
-
-      for (const image of images) {
-        try {
-          let storageFilepath = null;
-
-          if (image.startsWith('http')) {
-            storageFilepath = image.split('://')[1]; // To remove the https:// part
-            storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
-          } else {
-            storageFilepath = image;
-          }
-
-          const signedUrl = await getDownloadURL(ref(storage, storageFilepath)); // Get the signed URL
-          signedUrls.push(signedUrl);
-        } catch (error) {
-          console.log('Got error getting signed url for: ', image, error);
-        }
-      }
-
-      setUploadedImages(signedUrls);
-      setTimeout(() => setUploading(false), 500);
-    };
-
     if (isAI && imagesInit && imagesInit.length > 0) {
-      generateSignedUrls(imagesInit);
+      generateSignedUrls({
+        images: imagesInit,
+        storage: storage,
+        setImages: isActive || !isMoodboard ? setUploadedImages : setSelectedImages,
+        setUploading: setUploading,
+      });
     }
   }, [imagesInit]);
 
@@ -127,8 +114,8 @@ const ImageUpload = ({
 
   // Function to submit moodboard images
   const onSubmitMoodboard_ = () => {
-    setShowSubmitMoodboardButton(false);
-    onSubmitMoodboard(selectedImages);
+    setShowMoodboardSubmit(false);
+    onSubmitMoodboard([...new Set(selectedImages)]);
   };
 
   return (
@@ -143,14 +130,14 @@ const ImageUpload = ({
         >
           {isAI
             ? isMoodboard
-              ? showMoodboardSubmitButton
+              ? showMoodboardSubmit
                 ? `Here is your moodboard, ${user?.name?.split(' ')[0].trim()}! Please select the images you like.`
                 : 'Thank you for your selection!'
               : `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
             : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸'])}`}
         </p>
         <div className="upload-square">
-          {isActive && (
+          {isActive && !isAI && (
             <input
               type="file"
               accept="image/*"
@@ -160,8 +147,9 @@ const ImageUpload = ({
               style={{ display: 'none' }}
             />
           )}
-          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 464 : 572 }}>
+          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 532 : 728 }}>
             {isActive &&
+              !isAI &&
               (uploading ? (
                 <Spinner
                   size={32}
@@ -175,15 +163,16 @@ const ImageUpload = ({
                 </div>
               ))}
             {!uploading &&
-              uploadedImages.length > 0 &&
-              uploadedImages.map((url, index) => (
+              usedImages &&
+              usedImages.length > 0 &&
+              usedImages.map((url, index) => (
                 <div
                   key={index}
                   className="uploaded-image-wrapper"
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  {isMoodboard && loadedImages[url] && (
+                  {isActive && isMoodboard && loadedImages[url] && (
                     <Checkbox
                       isSelectedInit={selectedImagesInit?.includes(url)}
                       onPress={() => setSelectedImages((prev) => [...prev, url])}
@@ -196,11 +185,11 @@ const ImageUpload = ({
                     height={0}
                     key={index}
                     sizes="100vw"
-                    style={{ width: 'auto', height: 128 }} // optional
+                    style={{ width: 'auto', height: 164 }} // optional
                     src={url}
                     onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />
-                  {hoveredIndex === index && isActive && (
+                  {hoveredIndex === index && isActive && !isAI && (
                     <img
                       className="remove-image-button"
                       src="/discard_button_with_bg.png"
@@ -211,21 +200,26 @@ const ImageUpload = ({
               ))}
           </div>
         </div>
-        {isActive && !uploading && uploadedImages && uploadedImages.length > 0 && (
-          <div className="image-upload-button-div">
-            <Button
-              text="Next"
-              type="button"
-              width={64}
-              fontSize={16}
-              alignSelf="flex-end"
-              borderRadius={8}
-              marginTop={24}
-              onClick={() => onSubmit_()}
-            />
-          </div>
-        )}
-        {showMoodboardSubmitButton && isMoodboard && (
+        {!isMoodboard &&
+          isActive &&
+          !isAI &&
+          !uploading &&
+          uploadedImages &&
+          uploadedImages.length >= MIN_IMAGES_REQUIRED && (
+            <div className="image-upload-button-div">
+              <Button
+                text="Next"
+                type="button"
+                width={64}
+                fontSize={16}
+                alignSelf="flex-end"
+                borderRadius={8}
+                marginTop={24}
+                onClick={() => onSubmit_()}
+              />
+            </div>
+          )}
+        {showMoodboardSubmit && isMoodboard && selectedImages?.length > 0 && (
           <div className="image-upload-button-div">
             <Button
               text="Next"

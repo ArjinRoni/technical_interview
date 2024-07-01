@@ -84,7 +84,7 @@ const UserInput = ({
         <textarea
           ref={textareaRef}
           placeholder="Reply to Madison..."
-          style={{ fontFamily: secondaryFont.style.fontFamily, height }}
+          style={{ fontFamily: secondaryFont.style.fontFamily, minHeight: height, height }}
           className="user-input"
           value={userMessage}
           onChange={(e) => setUserMessage(e.target.value)}

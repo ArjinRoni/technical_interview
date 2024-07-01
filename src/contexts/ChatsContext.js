@@ -28,6 +28,7 @@ export const ChatsContext = createContext({
   getMessages: async () => {},
   getAllUserMessages: async () => {},
   updateMessageRating: async () => {},
+  updateMessage: async () => {},
 });
 
 export const useChats = () => useContext(ChatsContext);
@@ -149,8 +150,10 @@ export const ChatsProvider = ({ children }) => {
           role: message.role,
           text: message.text,
           images: message.images || [],
+          shots: message.shots || null,
           rating: message.rating || 0,
           step: message.step || null,
+          suggestions: message.suggestions || [],
           createdAt: new Date(),
         };
 
@@ -221,6 +224,10 @@ export const ChatsProvider = ({ children }) => {
         const messagesSnapshot = await getDocs(messagesRef);
         const deletionPromises = messagesSnapshot.docs.map((doc) => deleteDoc(doc.ref));
         await Promise.all(deletionPromises);
+
+        // Delete the chat document itself
+        const chatRef = doc(db, 'chats', chatId);
+        await deleteDoc(chatRef);
 
         // Refresh chats
         await getAndSetChats(user.userId);
@@ -301,6 +308,23 @@ export const ChatsProvider = ({ children }) => {
     }
   };
 
+  // Function to update a message
+  const updateMessage = async (chatId, messageId, updateData = {}) => {
+    if (user && user.userId) {
+      try {
+        // Get the message document reference
+        const messageRef = doc(db, 'chats', chatId, 'messages', messageId);
+
+        // Update the chat document by appending the update data
+        await updateDoc(messageRef, { ...updateData }, { merge: true });
+      } catch (error) {
+        console.log('Got error updating message: ', error);
+      }
+    } else {
+      console.log('Cannot update a message without user credentials');
+    }
+  };
+
   // Hook to retrieve and set chats for the user
   useEffect(() => {
     if (user && user.userId) {
@@ -321,6 +345,7 @@ export const ChatsProvider = ({ children }) => {
         getMessages,
         getAllUserMessages,
         updateMessageRating,
+        updateMessage,
       }}
     >
       {children}

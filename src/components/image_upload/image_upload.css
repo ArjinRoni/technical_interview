@@ -28,8 +28,6 @@
 }
 
 .uploaded-image {
-    width: 100px;
-    height: 100px;
     border-radius: 8px;
 }
 
@@ -40,8 +38,8 @@
     justify-content: center;
     border-radius: 8px;
     background-color: rgb(28, 28, 28);
-    width: 128px;
-    height: 128px;
+    width: 164px;
+    height: 164px;
     cursor: pointer;
     transition: transform 0.1s ease-out;
 }

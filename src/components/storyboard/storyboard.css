@@ -1,0 +1,67 @@
+.storyboard-div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    row-gap: 32px;
+    column-gap: 32px;
+}
+
+.storyboard-image {
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.storyboard-image-div {
+    display: flex;
+    flex-direction: column;
+}
+
+.storyboard-image-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.storyboard-image-header p {
+    font-size: 18px;
+}
+
+.storyboard-prompt-input {
+    margin-top: 4px;
+    position: relative;
+    background-color: #222222;
+    border: none;
+    color: white;
+    border-radius: 4px;
+    font-size: 16px;
+    padding-top: 10px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 10px;
+    resize: none;
+    outline: none;
+}
+
+.storyboard-image-inner-div {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.storyboard-image-buttons-div {
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 8px;
+}
+
+.storyboard-image-buttons-div img {
+    cursor: pointer;
+    width: 32;
+    height: 32;
+}

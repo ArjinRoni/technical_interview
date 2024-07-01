@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import './countdown_progress_timer.css';
 
@@ -24,7 +25,7 @@ const CountdownProgressTimer = ({ minutes = 15 }) => {
     const remainingSeconds = seconds % 60;
     return includeSeconds
       ? `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-      : `${minutes.toString().padStart(2, '0')} mins remaining`;
+      : `~${minutes.toString()} mins remaining`;
   };
 
   const progressPercentage = ((totalSeconds - timeLeft) / totalSeconds) * 100;
