@@ -16,7 +16,7 @@ const PropmtInput = ({ placeholder, value, setValue }) => {
   const { secondaryFont } = useFont();
   const textareaRef = useRef(null);
 
-  const width = 256;
+  const width = 256 * 1.3;
 
   // Function to adjust the height of the textarea
   const adjustHeight = () => {
@@ -95,7 +95,7 @@ const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh }) => {
             height={0}
             key={`${shotNumber}-${currentPairIndex}`}
             sizes="100vw"
-            style={{ width: 256, height: 256 * (9 / 16) }} // TODO: Set height to 'auto' later
+            style={{ width: 256 * 1.3, height: 256 * 1.3 * (9 / 16) }} // TODO: Set height to 'auto' later
             src={image}
             onLoad={() => setLoadedImages((prev) => ({ ...prev, [image]: true }))}
           />
@@ -103,8 +103,8 @@ const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh }) => {
           <SkeletonTheme
             baseColor="#202020"
             highlightColor="#444444"
-            width={256}
-            height={256 * (9 / 16) - 2}
+            width={256 * 1.3}
+            height={256 * 1.3 * (9 / 16) - 2}
           >
             <Skeleton count={1} style={{ marginBottom: 6 }} />
           </SkeletonTheme>
@@ -181,7 +181,7 @@ const Storyboard = ({ isActive = false, chatId = null, shotsInit = {}, onSubmit 
   };
 
   return (
-    <div className="storyboard-div" style={{ maxWidth: 544 }}>
+    <div className="storyboard-div" style={{ maxWidth: 700 }}>
       {Object.entries(shots).map(([shotNumber, promptImagePairs]) => (
         <Shot
           key={`${shotNumber}`}
