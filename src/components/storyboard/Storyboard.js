@@ -178,6 +178,10 @@ const Storyboard = ({ isActive = false, chatId = null, shotsInit = {}, onSubmit 
       updatedShots[shotNumber] = [...updatedShots[shotNumber], { [prompt]: null }];
       return updatedShots;
     });
+
+    // TODO: Call inference with `prompt` and `shotNumber`
+    // TODO: Can the inference get only one prompt with shot number specified
+    // TODO: Inference'da iki mod: 1) 4 image prompt, 4 image cikariyor, 2) 1 image prompt, 1 shot number, 1 image cikariyor
   };
 
   return (
