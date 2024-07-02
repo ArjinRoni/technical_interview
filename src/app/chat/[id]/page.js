@@ -6,7 +6,7 @@ import { ref, uploadString } from 'firebase/storage';
 import { v4 as uuidv4 } from 'uuid';
 import '../../../styles/chat.css';
 
-import { Sidebar, Glow, UserInput, Message, Progress } from '@/components';
+import { Sidebar, Glow, UserInput, Message, Progress, LanguagePicker } from '@/components';
 
 import { useChats } from '@/contexts/ChatsContext';
 import { useMadison } from '@/contexts/MadisonContext';
@@ -33,7 +33,7 @@ const ChatPage = ({ params }) => {
 
   // Hooks
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, languageCode, setLanguageCode } = useAuth();
   const { isSidebarOpen, setIsLoading, setLoadingMessage } = useUI();
   const { openai, currentRun, generateImage, addUserMessageToThread } = useMadison();
   const {
@@ -65,50 +65,6 @@ const ChatPage = ({ params }) => {
 
   // Variable to track if the current chat has messages
   const hasMessages = messages && messages.length > 0;
-
-  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
-  const isSimulateStoryboard = false; // Set to true to simulate storyboard
-  useEffect(() => {
-    const simulateStoryboard = async () => {
-      console.log('Simulating storyboard...');
-
-      // Generate the image URLs for the moodboard
-      const prompts = ['deer', 'car', 'woman', 'bicycle'];
-      let images = await generateImagesParallel(prompts);
-
-      const uploadPromises = Array.from(images).map(async ({ prompt, base64 }, index) => {
-        const chatId = currentChat.id;
-        const storageFilepath = `users/${user.userId}/${chatId}/output/${index}.png`;
-        const storageRef = ref(storage, storageFilepath);
-        await uploadString(storageRef, base64, 'base64');
-        return storageFilepath;
-      });
-
-      const imageStorageFilepaths = await Promise.all(uploadPromises);
-
-      // Generate shots
-      const shots = transformToShots(prompts, imageStorageFilepaths);
-
-      // Construct the message DB object
-      const message = {
-        id: uuidv4(),
-        role: 'assistant',
-        text: null,
-        shots: shots,
-        step: STEPS.STORYBOARD,
-        rating: 0,
-      };
-
-      // Remove the loading messages and add the message with images to update the interface
-      setMessages((prev) => [...removeLoading(prev), message]);
-
-      // Create the message DB object in the backend
-      createMessage({ message, chatId: currentChat.id });
-    };
-
-    isSimulateStoryboard && setTimeout(() => simulateStoryboard(), 5000);
-  }, [isSimulateStoryboard]);
-  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
 
   // Hook to get and set the current chat based on the chat no (refresh)
   useEffect(() => {
@@ -178,6 +134,50 @@ const ChatPage = ({ params }) => {
       console.log('Got error fetching the chat: ', error);
     }
   }, [chats, id]);
+
+  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
+  const isSimulateStoryboard = true; // Set to true to simulate storyboard
+  useEffect(() => {
+    const simulateStoryboard = async () => {
+      console.log('Simulating storyboard...');
+
+      // Generate the image URLs for the moodboard
+      const prompts = ['deer', 'car', 'woman', 'bicycle'];
+      let images = await generateImagesParallel(prompts);
+
+      const uploadPromises = Array.from(images).map(async ({ prompt, base64 }, index) => {
+        const chatId = currentChat.id;
+        const storageFilepath = `users/${user.userId}/${chatId}/output/${index}.png`;
+        const storageRef = ref(storage, storageFilepath);
+        await uploadString(storageRef, base64, 'base64');
+        return storageFilepath;
+      });
+
+      const imageStorageFilepaths = await Promise.all(uploadPromises);
+
+      // Generate shots
+      const shots = transformToShots(prompts, imageStorageFilepaths);
+
+      // Construct the message DB object
+      const message = {
+        id: uuidv4(),
+        role: 'assistant',
+        text: null,
+        shots: shots,
+        step: STEPS.STORYBOARD,
+        rating: 0,
+      };
+
+      // Remove the loading messages and add the message with images to update the interface
+      setMessages((prev) => [...removeLoading(prev), message]);
+
+      // Create the message DB object in the backend
+      createMessage({ message, chatId: currentChat.id });
+    };
+
+    isSimulateStoryboard && currentChat && setTimeout(() => simulateStoryboard(), 5000);
+  }, [isSimulateStoryboard, currentChat]);
+  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
 
   // Hook to add a skeleton loader at the end if one does not exist
   useEffect(() => {
@@ -610,6 +610,43 @@ const ChatPage = ({ params }) => {
     }
   };
 
+  // Function to handle inference refresh
+  const handleInferenceRefreshCalled = async (imagePrompt, shotNumber, simulate = true) => {
+    try {
+      // TODO: Do we want to update chat properties (see `handleInferenceCalled`)
+      const { classificationToken: classificationToken_ } = await getChatDetails(currentChat.id);
+
+      if (simulate) {
+        console.log('Inference simulated.');
+        return true;
+      }
+
+      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/image_generation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
+          classification_token: classificationToken_,
+          image_prompts: [imagePrompt],
+          shot_number: shotNumber,
+          user_id: user.userId,
+          chat_id: currentChat.id,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Inference refresh initiated with response:', response); // Inference initiated successfully
+        return true;
+      } else {
+        console.error('Failed to complete inference refresh'); // Handle error case
+        return false;
+      }
+    } catch (error) {
+      console.error('Error triggering inference refresh:', error);
+      return false;
+    }
+  };
+
   // Hook to keep the messages container scroll to the bottom
   useEffect(() => {
     if (currentChat && messages && messages.length > 0) {
@@ -692,6 +729,9 @@ const ChatPage = ({ params }) => {
               {currentChat?.title}
             </p>
             {hasMessages && <Progress step={currentStep} maxSteps={10} />}
+            {hasMessages && (
+              <LanguagePicker languageCode={languageCode} setLanguageCode={setLanguageCode} />
+            )}
             <img
               style={{ cursor: 'pointer', position: 'absolute', right: 32, width: 32, height: 32 }}
               src="/delete.png"
@@ -718,6 +758,7 @@ const ChatPage = ({ params }) => {
                   setUserMessage={setUserMessage}
                   handleImageUpload={(urls) => handleImageUpload(urls)}
                   handleMoodboardImageSelection={(images) => handleMoodboardImageSelection(images)}
+                  handleInferenceRefreshCalled={handleInferenceRefreshCalled}
                   imagePrompts={message.step === STEPS.STORYBOARD ? imagePrompts : null}
                   moodboardPrompts={message.step === STEPS.MOODBOARD ? moodboardPrompts : null}
                 />

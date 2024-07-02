@@ -32,6 +32,7 @@ const Message = ({
   moodboardPrompts = [],
   handleImageUpload = () => {},
   handleMoodboardImageSelection = () => {},
+  handleInferenceRefreshCalled = () => {},
   onSubmit = () => {},
   setUserMessage = () => {},
 }) => {
@@ -57,8 +58,6 @@ const Message = ({
     isClassificationToken = false,
   } = message;
   const isAI = role === 'assistant';
-
-  console.log('Got step: ', step, shots);
 
   // State to manage the rating locally
   const [localRating, setLocalRating] = useState(rating);
@@ -134,6 +133,7 @@ const Message = ({
             chatId={chatId}
             shotsInit={shots}
             onSubmit={(urls) => handleImageUpload(urls)}
+            handleInferenceRefreshCalled={handleInferenceRefreshCalled}
           />
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload

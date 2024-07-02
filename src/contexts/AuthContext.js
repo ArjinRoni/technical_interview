@@ -14,6 +14,8 @@ import { useFB } from './FBContext';
 
 const AuthContext = createContext({
   user: null,
+  languageCode: null,
+  setLanguageCode: () => {},
   login: async () => {},
   signup: async () => {},
   logout: async () => {},
@@ -28,7 +30,19 @@ export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
   const [user, setUser] = useState(null);
+  const [languageCode, setLanguageCode] = useState('en'); // Default to 'en'
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  // Hook to set language code on the client side
+  useEffect(() => {
+    try {
+      const detectedLanguage =
+        (navigator.language || navigator.userLanguage)?.split('-')[0] || 'en';
+      setLanguageCode(detectedLanguage);
+    } catch (error) {
+      console.log('Got error detecting language: ', navigator);
+    }
+  }, []);
 
   // Hook to auto sign in user if credentials are restored
   useEffect(() => {
@@ -144,7 +158,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, deleteAccount, isAuthLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        languageCode,
+        setLanguageCode,
+        login,
+        signup,
+        logout,
+        deleteAccount,
+        isAuthLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

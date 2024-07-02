@@ -1,6 +1,5 @@
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-hot-toast';
 
@@ -9,6 +8,7 @@ import './image_upload.css';
 import Button from '../button/Button';
 import Spinner from '../spinner/Spinner';
 import Checkbox from '../checkbox/Checkbox';
+import Image from '../image/Image';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
@@ -147,7 +147,7 @@ const ImageUpload = ({
               style={{ display: 'none' }}
             />
           )}
-          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 532 : 728 }}>
+          <div className="uploaded-images-div" style={{ maxWidth: 728 }}>
             {isActive &&
               !isAI &&
               (uploading ? (
@@ -185,7 +185,7 @@ const ImageUpload = ({
                     height={0}
                     key={index}
                     sizes="100vw"
-                    style={{ width: 'auto', height: 164 }} // optional
+                    style={{ width: 'auto', height: isMoodboard ? 256 * 0.885 : 164 }} // optional
                     src={url}
                     onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />

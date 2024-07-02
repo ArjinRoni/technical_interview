@@ -8,6 +8,7 @@
     top: -8px;
     cursor: pointer;
     transition: transform 0.1s ease-out;
+    z-index: 1000;
 }
 
 .checkbox:hover {

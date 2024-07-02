@@ -9,6 +9,7 @@ const Button = ({
   width = '100%',
   fontSize = 18,
   marginTop = 24,
+  paddingVertical = undefined,
   alignSelf = undefined,
   emoji = null,
   onClick = null,
@@ -34,7 +35,14 @@ const Button = ({
   return (
     <button
       ref={ref}
-      style={{ alignSelf, borderRadius, width, marginTop }}
+      style={{
+        alignSelf,
+        borderRadius,
+        width,
+        marginTop,
+        paddingTop: paddingVertical,
+        paddingBottom: paddingVertical,
+      }}
       className="button"
       type={type}
       onClick={handleClick}

@@ -23,3 +23,5 @@ export { default as ClassificationTokenForm } from './classification_token_form/
 export { default as FormInput } from './form_input/FormInput';
 export { default as CountdownProgressTimer } from './countdown_progress_timer/CountdownProgressTimer';
 export { default as Storyboard } from './storyboard/Storyboard';
+export { default as LanguagePicker } from './language_picker/LanguagePicker';
+export { default as Image } from './image/Image';

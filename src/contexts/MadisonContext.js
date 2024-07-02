@@ -20,7 +20,7 @@ export const MadisonContext = createContext({
 export const useMadison = () => useContext(MadisonContext);
 
 export const MadisonProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, languageCode } = useAuth();
 
   // TODO: Can create a helper assistant to set custom / unique titles for each ad.
   const [assistant, setAssistant] = useState(null);
@@ -183,7 +183,7 @@ export const MadisonProvider = ({ children }) => {
   const createRun = async (threadId) => {
     let run = await openai.beta.threads.runs.createAndPoll(threadId, {
       assistant_id: assistant.id,
-      additional_instructions: `Please address the user as ${user?.name?.split(' ')[0]?.trim()}.`,
+      additional_instructions: `Please address the user as ${user?.name?.split(' ')[0]?.trim()}. Please use the following language (code) in your conversation with the user: ${languageCode ?? 'en'}`,
     });
 
     setCurrentRun(run);

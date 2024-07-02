@@ -5,7 +5,6 @@ import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import './storyboard.css';
 
 import Button from '../button/Button';
-import Spinner from '../spinner/Spinner';
 
 import { useFont } from '@/contexts/FontContext';
 import { useFB } from '@/contexts/FBContext';
@@ -27,14 +26,10 @@ const PropmtInput = ({ placeholder, value, setValue }) => {
   };
 
   // Adjust height on mount and when value changes
-  useEffect(() => {
-    adjustHeight();
-  }, [value]);
+  useEffect(() => adjustHeight(), [value]);
 
   // Adjust height when placeholder changes (in case it's longer than the value)
-  useEffect(() => {
-    adjustHeight();
-  }, [placeholder]);
+  useEffect(() => adjustHeight(), [placeholder]);
 
   return (
     <textarea
@@ -58,7 +53,7 @@ const PropmtInput = ({ placeholder, value, setValue }) => {
   );
 };
 
-const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh }) => {
+const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh = async () => {} }) => {
   const { primaryFont } = useFont();
   const [currentPairIndex, setCurrentPairIndex] = useState(promptImagePairs.length - 1);
   const [[prompt, image]] = Object.entries(promptImagePairs[currentPairIndex]);
@@ -76,13 +71,17 @@ const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh }) => {
         <div>
           <Button
             width={76}
+            paddingVertical={9}
             text="Refresh"
             type="button"
             fontSize={14}
             alignSelf="flex-end"
             borderRadius={8}
             marginTop={0}
-            onClick={() => onRefresh({ prompt: value, shotNumber })}
+            onClick={async () => {
+              await onRefresh({ prompt: value, shotNumber });
+              setCurrentPairIndex((prev) => prev + 1);
+            }}
           />
         </div>
       </div>
@@ -136,7 +135,13 @@ const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh }) => {
     </div>
   );
 };
-const Storyboard = ({ isActive = false, chatId = null, shotsInit = {}, onSubmit = () => {} }) => {
+const Storyboard = ({
+  isActive = false,
+  chatId = null,
+  shotsInit = {},
+  onSubmit = () => {},
+  onHandleInferenceRefreshCalled = async () => {},
+}) => {
   const { storage } = useFB();
 
   const [loading, setLoading] = useState(false);
@@ -170,7 +175,7 @@ const Storyboard = ({ isActive = false, chatId = null, shotsInit = {}, onSubmit 
   }, [shotsInit]);
 
   // Function that governs what happens when a user refreshes the shot with a new prompt
-  const onRefresh = ({ prompt, shotNumber }) => {
+  const onRefresh = async ({ prompt, shotNumber }) => {
     // TODO: Here you would typically call an API to generate a new image
     // For this example, we'll just duplicate the last image
     setShots((prevShots) => {
@@ -182,6 +187,8 @@ const Storyboard = ({ isActive = false, chatId = null, shotsInit = {}, onSubmit 
     // TODO: Call inference with `prompt` and `shotNumber`
     // TODO: Can the inference get only one prompt with shot number specified
     // TODO: Inference'da iki mod: 1) 4 image prompt, 4 image cikariyor, 2) 1 image prompt, 1 shot number, 1 image cikariyor
+
+    await onHandleInferenceRefreshCalled(prompt, shotNumber);
   };
 
   return (
