@@ -227,6 +227,9 @@ const ChatPage = ({ params }) => {
         updateMessages: false,
         addToDB: false,
       });
+
+      // Update the main chat objects with training images (URLs)
+      await updateChat(currentChat.id, { trainingImages: urls });
     } catch (error) {
       console.log('Got error @handleImageUpload: ', error);
     }
@@ -455,7 +458,7 @@ const ChatPage = ({ params }) => {
     businessDescription,
     classificationToken,
     imageUrls,
-    simulate = true,
+    simulate = false,
   ) => {
     try {
       // Set classification token
@@ -509,6 +512,9 @@ const ChatPage = ({ params }) => {
       updateMessages: false,
       addToDB: false,
     });
+
+    // Update the main chat object moodboard images (URLs)
+    await updateChat(currentChat.id, { moodboardImages: images });
   };
 
   // Generate the image URLs for the moodboard in parallel
@@ -525,7 +531,10 @@ const ChatPage = ({ params }) => {
   const handleMoodboardCalled = async (imagePrompts) => {
     try {
       setMoodboardPrompts(imagePrompts);
+
+      // Update the main chat object with moodboard prompts
       await updateChat(currentChat.id, { moodboardPrompts: imagePrompts });
+
       setMessages((prev) => [...removeLoading(prev), MESSAGES.LOADING]);
 
       let images = await generateImagesParallel(imagePrompts);
@@ -570,7 +579,7 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle inference
-  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = true) => {
+  const handleInferenceCalled = async (imagePrompts, classificationToken, simulate = false) => {
     try {
       // Set the image prompts and the classification token
       setImagePrompts(imagePrompts);
@@ -578,6 +587,9 @@ const ChatPage = ({ params }) => {
 
       // Update the chat properties
       await updateChat(currentChat.id, { imagePrompts, classificationToken });
+
+      // Retrieve the moodboard image URLs and training image URLs
+      const { moodboardImages, trainingImages } = await getChatDetails(currentChat.id);
 
       if (simulate) {
         console.log('Inference simulated.');
@@ -589,7 +601,10 @@ const ChatPage = ({ params }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classification_token: classificationToken,
+          moodboard_img_urls: moodboardImages,
+          training_img_urls: trainingImages,
           image_prompts: imagePrompts,
+          shot_number: null,
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
           user_id: user.userId,
           chat_id: currentChat.id,
