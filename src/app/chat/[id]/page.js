@@ -625,10 +625,14 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle inference refresh
-  const handleInferenceRefreshCalled = async (imagePrompt, shotNumber, simulate = true) => {
+  const handleInferenceRefreshCalled = async (imagePrompt, shotNumber, simulate = false) => {
     try {
-      // TODO: Do we want to update chat properties (see `handleInferenceCalled`)
-      const { classificationToken: classificationToken_ } = await getChatDetails(currentChat.id);
+      // Retrieve the moodboard image URLs and training image URLs
+      const {
+        classificationToken: classificationToken_,
+        moodboardImages,
+        trainingImages,
+      } = await getChatDetails(currentChat.id);
 
       if (simulate) {
         console.log('Inference simulated.');
@@ -640,6 +644,8 @@ const ChatPage = ({ params }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           classification_token: classificationToken_,
+          moodboard_img_urls: moodboardImages,
+          training_img_urls: trainingImages,
           image_prompts: [imagePrompt],
           shot_number: shotNumber,
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
@@ -662,7 +668,7 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle video generation
-  const handleVideoGenerationCalled = async (imagePrompts, imageUrls, simulate = true) => {
+  const handleVideoGenerationCalled = async (imagePrompts, imageUrls, simulate = false) => {
     try {
       // TODO: Do we want to update chat properties (see `handleInferenceCalled`)
       const { classificationToken: classificationToken_ } = await getChatDetails(currentChat.id);
