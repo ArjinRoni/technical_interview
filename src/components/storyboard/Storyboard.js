@@ -146,7 +146,7 @@ const Shot = ({
 const Storyboard = ({
   isActive = false,
   shotsInit = {},
-  onHandleInferenceRefreshCalled = async () => {},
+  handleInferenceRefreshCalled = async () => {},
   onSubmit = () => {},
 }) => {
   const { storage } = useFB();
@@ -198,7 +198,7 @@ const Storyboard = ({
       [shotNumber]: prompt,
     }));
 
-    await onHandleInferenceRefreshCalled(prompt, shotNumber);
+    await handleInferenceRefreshCalled(prompt, shotNumber);
   };
 
   const handleSubmit = () => {
@@ -237,17 +237,19 @@ const Storyboard = ({
         />
       ))}
       {isActive && (
-        <Button
-          width={76}
-          paddingVertical={12}
-          text="Next"
-          type="button"
-          fontSize={16}
-          alignSelf="flex-end"
-          borderRadius={8}
-          marginTop={0}
-          onClick={handleSubmit}
-        />
+        <div className="storyboard-next-button-div">
+          <Button
+            width={76}
+            paddingVertical={12}
+            text="Next"
+            type="button"
+            fontSize={16}
+            alignSelf="flex-end"
+            borderRadius={8}
+            marginTop={0}
+            onClick={handleSubmit}
+          />
+        </div>
       )}
     </div>
   );

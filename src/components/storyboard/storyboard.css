@@ -66,3 +66,12 @@
     width: 32;
     height: 32;
 }
+
+.storyboard-next-button-div {
+    position: relative;
+    display: flex;
+    width: 100%;
+    padding-right: 1px;
+    padding-bottom: 8px;
+    justify-content: flex-end;
+}
