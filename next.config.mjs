@@ -6,6 +6,7 @@ const nextConfig = {
     ACCESS_CODE: process.env.ACCESS_CODE,
     INSTANCE_BASE_URL: process.env.INSTANCE_BASE_URL,
     MIXPANEL_TOKEN: process.env.MIXPANEL_TOKEN,
+    LEONARDO_TOKEN: process.env.LEONARDO_TOKEN,
   },
   images: {
     remotePatterns: [

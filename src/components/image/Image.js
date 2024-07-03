@@ -16,13 +16,18 @@ const Image = (props) => {
   if (isEnlarged) {
     delete enlargedImageProps.width;
     delete enlargedImageProps.height;
-    enlargedImageProps.layout = 'fill';
-    enlargedImageProps.objectFit = 'contain';
+    enlargedImageProps.fill = true;
+    enlargedImageProps.sizes = '100vw';
 
     // Remove width and height from style object if it exists
     if (enlargedImageProps.style) {
       const { width, height, ...restStyle } = enlargedImageProps.style;
-      enlargedImageProps.style = restStyle;
+      enlargedImageProps.style = {
+        ...restStyle,
+        objectFit: 'contain',
+      };
+    } else {
+      enlargedImageProps.style = { objectFit: 'contain' };
     }
   }
 

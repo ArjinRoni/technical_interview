@@ -33,6 +33,7 @@ const Message = ({
   handleImageUpload = () => {},
   handleMoodboardImageSelection = () => {},
   handleInferenceRefreshCalled = () => {},
+  handleVideoGenerationCalled = () => {},
   onSubmit = () => {},
   setUserMessage = () => {},
 }) => {
@@ -130,10 +131,9 @@ const Message = ({
         ) : step && step === STEPS.STORYBOARD ? (
           <Storyboard
             isActive={isActive}
-            chatId={chatId}
             shotsInit={shots}
-            onSubmit={(urls) => handleImageUpload(urls)}
             handleInferenceRefreshCalled={handleInferenceRefreshCalled}
+            onSubmit={handleVideoGenerationCalled}
           />
         ) : isImageUpload || (images && images.length > 0) ? (
           <ImageUpload

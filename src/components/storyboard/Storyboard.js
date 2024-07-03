@@ -53,7 +53,13 @@ const PropmtInput = ({ placeholder, value, setValue }) => {
   );
 };
 
-const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh = async () => {} }) => {
+const Shot = ({
+  shotNumber,
+  isActive = false,
+  promptImagePairs,
+  setLoadedImages,
+  onRefresh = async () => {},
+}) => {
   const { primaryFont } = useFont();
   const [currentPairIndex, setCurrentPairIndex] = useState(promptImagePairs.length - 1);
   const [[prompt, image]] = Object.entries(promptImagePairs[currentPairIndex]);
@@ -68,22 +74,24 @@ const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh = async
     <div className="storyboard-image-div">
       <div className="storyboard-image-header" style={{ fontFamily: primaryFont.style.fontFamily }}>
         <p>Shot {shotNumber}</p>
-        <div>
-          <Button
-            width={76}
-            paddingVertical={9}
-            text="Refresh"
-            type="button"
-            fontSize={14}
-            alignSelf="flex-end"
-            borderRadius={8}
-            marginTop={0}
-            onClick={async () => {
-              await onRefresh({ prompt: value, shotNumber });
-              setCurrentPairIndex((prev) => prev + 1);
-            }}
-          />
-        </div>
+        {isActive && (
+          <div>
+            <Button
+              width={76}
+              paddingVertical={9}
+              text="Refresh"
+              type="button"
+              fontSize={14}
+              alignSelf="flex-end"
+              borderRadius={8}
+              marginTop={0}
+              onClick={async () => {
+                await onRefresh({ prompt: value, shotNumber });
+                setCurrentPairIndex((prev) => prev + 1);
+              }}
+            />
+          </div>
+        )}
       </div>
       <div className="storyboard-image-inner-div">
         {image ? (
@@ -137,16 +145,17 @@ const Shot = ({ shotNumber, promptImagePairs, setLoadedImages, onRefresh = async
 };
 const Storyboard = ({
   isActive = false,
-  chatId = null,
   shotsInit = {},
-  onSubmit = () => {},
   onHandleInferenceRefreshCalled = async () => {},
+  onSubmit = () => {},
 }) => {
   const { storage } = useFB();
 
   const [loading, setLoading] = useState(false);
   const [shots, setShots] = useState({});
   const [loadedImages, setLoadedImages] = useState({});
+  const [currentPairIndices, setCurrentPairIndices] = useState({});
+  const [currentPrompts, setCurrentPrompts] = useState({});
 
   // Hook to download the generated shot images and display to the user
   useEffect(() => {
@@ -174,21 +183,37 @@ const Storyboard = ({
     }
   }, [shotsInit]);
 
-  // Function that governs what happens when a user refreshes the shot with a new prompt
   const onRefresh = async ({ prompt, shotNumber }) => {
-    // TODO: Here you would typically call an API to generate a new image
-    // For this example, we'll just duplicate the last image
     setShots((prevShots) => {
       const updatedShots = { ...prevShots };
       updatedShots[shotNumber] = [...updatedShots[shotNumber], { [prompt]: null }];
       return updatedShots;
     });
-
-    // TODO: Call inference with `prompt` and `shotNumber`
-    // TODO: Can the inference get only one prompt with shot number specified
-    // TODO: Inference'da iki mod: 1) 4 image prompt, 4 image cikariyor, 2) 1 image prompt, 1 shot number, 1 image cikariyor
+    setCurrentPairIndices((prev) => ({
+      ...prev,
+      [shotNumber]: (prev[shotNumber] || 0) + 1,
+    }));
+    setCurrentPrompts((prev) => ({
+      ...prev,
+      [shotNumber]: prompt,
+    }));
 
     await onHandleInferenceRefreshCalled(prompt, shotNumber);
+  };
+
+  const handleSubmit = () => {
+    const prompts = {};
+    const images = {};
+
+    Object.entries(shots).forEach(([shotNumber, promptImagePairs]) => {
+      const currentIndex = currentPairIndices[shotNumber] || promptImagePairs.length - 1;
+      const [[prompt, imageUrl]] = Object.entries(promptImagePairs[currentIndex]);
+
+      prompts[shotNumber] = currentPrompts[shotNumber] || prompt;
+      images[shotNumber] = imageUrl;
+    });
+
+    onSubmit(prompts, images);
   };
 
   return (
@@ -196,12 +221,34 @@ const Storyboard = ({
       {Object.entries(shots).map(([shotNumber, promptImagePairs]) => (
         <Shot
           key={`${shotNumber}`}
+          isActive={isActive}
           shotNumber={shotNumber}
           promptImagePairs={promptImagePairs}
           setLoadedImages={setLoadedImages}
           onRefresh={onRefresh}
+          currentPairIndex={currentPairIndices[shotNumber] || promptImagePairs.length - 1}
+          setCurrentPairIndex={(index) =>
+            setCurrentPairIndices((prev) => ({ ...prev, [shotNumber]: index }))
+          }
+          currentPrompt={currentPrompts[shotNumber]}
+          setCurrentPrompt={(prompt) =>
+            setCurrentPrompts((prev) => ({ ...prev, [shotNumber]: prompt }))
+          }
         />
       ))}
+      {isActive && (
+        <Button
+          width={76}
+          paddingVertical={12}
+          text="Next"
+          type="button"
+          fontSize={16}
+          alignSelf="flex-end"
+          borderRadius={8}
+          marginTop={0}
+          onClick={handleSubmit}
+        />
+      )}
     </div>
   );
 };

@@ -4,6 +4,7 @@ import OpenAI from 'openai';
 
 import { useAuth } from './AuthContext';
 import { config } from '@/utils/AssistantUtils';
+import { generateAndRetrieveImages } from '@/utils/LeonardoUtils';
 
 export const MadisonContext = createContext({
   openai: null,
@@ -52,17 +53,26 @@ export const MadisonProvider = ({ children }) => {
   };
 
   // Function to generate an image given an image prompt
-  const generateImage = async (prompt, n = 1, model = 'dall-e-2') => {
-    const response = await openai.images.generate({
-      model,
-      prompt: `Do not generate product images, instead generate an artistic style image based on the following prompt: ${prompt}`,
-      n,
-      size: model === 'dall-e-2' ? '256x256' : '1024x1024',
-      response_format: 'b64_json',
-    });
+  const generateImage = async (prompt, n = 1, model = 'leonardo') => {
+    let imageBase64 = null;
+    let imageUrl = null;
 
-    const imageBase64 = response.data[0].b64_json;
-    return imageBase64;
+    if (model.includes('dall-e')) {
+      const response = await openai.images.generate({
+        model,
+        prompt: `${prompt}, moodboard image, post-production, high quality, aesthetic`,
+        n,
+        size: model === 'dall-e-2' ? '256x256' : '1024x1024',
+        response_format: 'b64_json',
+      });
+      imageBase64 = response.data[0].b64_json;
+    } else {
+      const prompt_ = `${prompt}, moodboard image, post-production, high quality, aesthetic`;
+      const response = await generateAndRetrieveImages(prompt_, n);
+      imageUrl = response?.generations_by_pk?.generated_images[0].url;
+    }
+
+    return { imageBase64, imageUrl };
   };
 
   // Function to add user message to the thread
