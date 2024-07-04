@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { ref, uploadBytes, uploadString } from 'firebase/storage';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import '../../../styles/chat.css';
 
@@ -24,7 +25,6 @@ import {
   isHideUserInput,
   isMessageLoading,
   finalStepsIdentifierText,
-  transformToShots,
 } from '@/utils/MessageUtils';
 
 const ChatPage = ({ params }) => {
@@ -45,7 +45,7 @@ const ChatPage = ({ params }) => {
     updateMessage,
     deleteChat,
   } = useChats();
-  const { storage } = useFB();
+  const { storage, db } = useFB();
   const { primaryFont } = useFont();
   const messagesContainerRef = useRef(null);
 
@@ -135,49 +135,41 @@ const ChatPage = ({ params }) => {
     }
   }, [chats, id]);
 
-  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
-  const isSimulateStoryboard = false; // Set to true to simulate storyboard
+  // Subscribe to storyboard and video messages so that user does not have to refresh (real-time features)
   useEffect(() => {
-    const simulateStoryboard = async () => {
-      console.log('Simulating storyboard...');
+    if (currentChat && db) {
+      const messagesRef = collection(db, 'chats', currentChat.id, 'messages');
+      const q = query(messagesRef, where('step', 'in', [STEPS.STORYBOARD, STEPS.VIDEOS]));
 
-      // Generate the image URLs for the moodboard
-      const prompts = ['deer', 'car', 'woman', 'bicycle'];
-      let images = await generateImagesParallel(prompts);
+      const unsubscribe = onSnapshot(
+        q,
+        (querySnapshot) => {
+          const updatedMessages = [];
+          querySnapshot.forEach((doc) => {
+            updatedMessages.push({ id: doc.id, ...doc.data() });
+          });
 
-      const uploadPromises = Array.from(images).map(async ({ prompt, base64 }, index) => {
-        const chatId = currentChat.id;
-        const storageFilepath = `users/${user.userId}/${chatId}/output/${index}.png`;
-        const storageRef = ref(storage, storageFilepath);
-        await uploadString(storageRef, base64, 'base64');
-        return storageFilepath;
-      });
+          setMessages((prevMessages) => {
+            const newMessages = [...prevMessages];
+            updatedMessages.forEach((updatedMessage) => {
+              const index = newMessages.findIndex((m) => m.id === updatedMessage.id);
+              if (index !== -1) {
+                newMessages[index] = updatedMessage;
+              } else {
+                newMessages.push(updatedMessage);
+              }
+            });
+            return newMessages;
+          });
+        },
+        (error) => {
+          console.error('Error listening to messages: ', error);
+        },
+      );
 
-      const imageStorageFilepaths = await Promise.all(uploadPromises);
-
-      // Generate shots
-      const shots = transformToShots(prompts, imageStorageFilepaths);
-
-      // Construct the message DB object
-      const message = {
-        id: uuidv4(),
-        role: 'assistant',
-        text: null,
-        shots: shots,
-        step: STEPS.STORYBOARD,
-        rating: 0,
-      };
-
-      // Remove the loading messages and add the message with images to update the interface
-      setMessages((prev) => [...removeLoading(prev), message]);
-
-      // Create the message DB object in the backend
-      createMessage({ message, chatId: currentChat.id });
-    };
-
-    isSimulateStoryboard && currentChat && setTimeout(() => simulateStoryboard(), 5000);
-  }, [isSimulateStoryboard, currentChat]);
-  // ----------------------------------------------------FOR SIMULATION----------------------------------------------------
+      return () => unsubscribe();
+    }
+  }, [currentChat, db]);
 
   // Hook to add a skeleton loader at the end if one does not exist
   useEffect(() => {
