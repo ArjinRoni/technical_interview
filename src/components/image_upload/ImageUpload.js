@@ -156,7 +156,7 @@ const ImageUpload = ({
               style={{ display: 'none' }}
             />
           )}
-          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 1000 : 728 }}>
+          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 1028 : 728 }}>
             {isActive &&
               !isAI &&
               (uploading ? (
@@ -194,7 +194,7 @@ const ImageUpload = ({
                     height={0}
                     key={index}
                     sizes="100vw"
-                    style={{ width: 'auto', height: isMoodboard ? 256 * 1.25 : 164 }} // optional
+                    style={{ width: isMoodboard ? 256 : 164, height: 'auto' }} // optional
                     src={url}
                     onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />

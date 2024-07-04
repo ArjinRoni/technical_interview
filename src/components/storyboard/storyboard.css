@@ -75,3 +75,15 @@
     padding-bottom: 8px;
     justify-content: flex-end;
 }
+
+.storyboard-end-div {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    height: 42px;
+    margin-top: 12px;
+}
+
+.storyboard-motion-scale-slider {
+    width: 50%;
+}

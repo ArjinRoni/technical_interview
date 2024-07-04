@@ -10,12 +10,13 @@ import { useFont } from '@/contexts/FontContext';
 import { useFB } from '@/contexts/FBContext';
 
 import { generateSignedUrls } from '@/utils/MediaUtils';
+import { scaleMotionScale } from '@/utils/MiscUtils';
 
-const PropmtInput = ({ placeholder, value, setValue }) => {
+const PromptInput = ({ placeholder, value, setValue }) => {
   const { secondaryFont } = useFont();
   const textareaRef = useRef(null);
 
-  const width = 256 * 1.3;
+  const width = 256 * 1.5;
 
   // Function to adjust the height of the textarea
   const adjustHeight = () => {
@@ -53,6 +54,71 @@ const PropmtInput = ({ placeholder, value, setValue }) => {
   );
 };
 
+const ShotTypeDropdown = ({ value, onChange }) => {
+  const { secondaryFont } = useFont();
+
+  return (
+    <select
+      className="storyboard-shot-type-dropdown"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={{
+        fontFamily: secondaryFont.style.fontFamily,
+        width: '50%',
+        padding: '8px',
+        paddingRight: '24px',
+        paddingLeft: '8px',
+        borderRadius: '4px',
+        border: 'none',
+        background: '#202020',
+        color: '#fff',
+        cursor: 'pointer',
+        borderRight: '12px solid transparent',
+      }}
+    >
+      <option value="wide">Wide Shot</option>
+      <option value="medium">Medium Shot</option>
+      <option value="close">Close Up</option>
+    </select>
+  );
+};
+
+const MotionScaleSlider = ({ value, onChange }) => {
+  const { secondaryFont } = useFont();
+
+  return (
+    <div className="storyboard-motion-scale-slider">
+      <label
+        style={{
+          fontFamily: secondaryFont.style.fontFamily,
+          fontSize: 14,
+          display: 'flex',
+          marginBottom: -2.5,
+        }}
+      >
+        Motion Scale: {value}
+      </label>
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.1"
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        style={{
+          width: '100%',
+          height: '8px',
+          background: 'linear-gradient(to right, #7063c5, #1e1361)',
+          outline: 'none',
+          opacity: '0.7',
+          transition: 'opacity .2s',
+          borderRadius: '3px',
+        }}
+      />
+    </div>
+  );
+};
+
 const Shot = ({
   shotNumber,
   isActive = false,
@@ -64,6 +130,8 @@ const Shot = ({
   const [currentPairIndex, setCurrentPairIndex] = useState(promptImagePairs.length - 1);
   const [[prompt, image]] = Object.entries(promptImagePairs[currentPairIndex]);
   const [value, setValue] = useState(prompt);
+  const [shotType, setShotType] = useState('medium');
+  const [motionScale, setMotionScale] = useState(0.5);
 
   useEffect(() => {
     const [[currentPrompt]] = Object.entries(promptImagePairs[currentPairIndex]);
@@ -86,7 +154,12 @@ const Shot = ({
               borderRadius={8}
               marginTop={0}
               onClick={async () => {
-                await onRefresh({ prompt: value, shotNumber });
+                await onRefresh({
+                  prompt: value,
+                  shotNumber: shotNumber,
+                  shotType: shotType,
+                  motionScale: scaleMotionScale(motionScale),
+                });
                 setCurrentPairIndex((prev) => prev + 1);
               }}
             />
@@ -102,7 +175,7 @@ const Shot = ({
             height={0}
             key={`${shotNumber}-${currentPairIndex}`}
             sizes="100vw"
-            style={{ width: 256 * 1.3, height: 256 * 1.3 * (9 / 16) }} // TODO: Set height to 'auto' later
+            style={{ width: 256 * 1.5, height: 256 * 1.5 * (9 / 16) }} // TODO: Set height to 'auto' later
             src={image}
             onLoad={() => setLoadedImages((prev) => ({ ...prev, [image]: true }))}
           />
@@ -110,8 +183,8 @@ const Shot = ({
           <SkeletonTheme
             baseColor="#202020"
             highlightColor="#444444"
-            width={256 * 1.3}
-            height={256 * 1.3 * (9 / 16) - 2}
+            width={256 * 1.5}
+            height={256 * 1.5 * (9 / 16) - 2}
           >
             <Skeleton count={1} style={{ marginBottom: 6 }} />
           </SkeletonTheme>
@@ -139,7 +212,11 @@ const Shot = ({
           )}
         </div>
       </div>
-      <PropmtInput placeholder={prompt} value={value} setValue={setValue} />
+      <PromptInput placeholder={prompt} value={value} setValue={setValue} />
+      <div className="storyboard-end-div">
+        <ShotTypeDropdown value={shotType} onChange={setShotType} />
+        <MotionScaleSlider value={motionScale} onChange={setMotionScale} />
+      </div>
     </div>
   );
 };
@@ -183,7 +260,7 @@ const Storyboard = ({
     }
   }, [shotsInit]);
 
-  const onRefresh = async ({ prompt, shotNumber }) => {
+  const onRefresh = async ({ prompt, shotNumber, shotType, motionScale }) => {
     setShots((prevShots) => {
       const updatedShots = { ...prevShots };
       updatedShots[shotNumber] = [...updatedShots[shotNumber], { [prompt]: null }];
@@ -198,7 +275,7 @@ const Storyboard = ({
       [shotNumber]: prompt,
     }));
 
-    await handleInferenceRefreshCalled(prompt, shotNumber);
+    await handleInferenceRefreshCalled(prompt, shotNumber, shotType, motionScale);
   };
 
   const handleSubmit = () => {
@@ -217,7 +294,7 @@ const Storyboard = ({
   };
 
   return (
-    <div className="storyboard-div" style={{ maxWidth: 700 }}>
+    <div className="storyboard-div" style={{ maxWidth: 800 }}>
       {Object.entries(shots).map(([shotNumber, promptImagePairs]) => (
         <Shot
           key={`${shotNumber}`}

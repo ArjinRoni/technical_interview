@@ -38,6 +38,9 @@ export async function generateAndRetrieveImages(
   numImages = 1,
   size = 1024,
   alchemy = false,
+  num_inference_steps = 10,
+  sd_version = 'SDXL_LIGHTNING',
+  guidance_scale = 4,
 ) {
   try {
     // Send generation request
@@ -47,6 +50,9 @@ export async function generateAndRetrieveImages(
       width: size,
       modelId: MODEL_ID,
       num_images: numImages,
+      num_inference_steps: num_inference_steps,
+      sd_version: sd_version,
+      guidance_scale: guidance_scale,
       presetStyle: 'DYNAMIC',
       prompt: prompt,
     };

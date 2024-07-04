@@ -616,7 +616,13 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle inference refresh
-  const handleInferenceRefreshCalled = async (imagePrompt, shotNumber, simulate = false) => {
+  const handleInferenceRefreshCalled = async (
+    imagePrompt,
+    shotNumber,
+    shotType,
+    motionScale,
+    simulate = false,
+  ) => {
     try {
       // Retrieve the moodboard image URLs and training image URLs
       const {
@@ -639,6 +645,8 @@ const ChatPage = ({ params }) => {
           training_img_urls: trainingImages,
           image_prompts: [imagePrompt],
           shot_number: shotNumber,
+          shot_types: [shotType],
+          motion_scales: [motionScale],
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
           user_id: user.userId,
           chat_id: currentChat.id,
