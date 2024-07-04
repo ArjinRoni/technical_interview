@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import OpenAI from 'openai';
 
 import { useAuth } from './AuthContext';
-import { config } from '@/utils/AssistantUtils';
+import { config, oneShotExample } from '@/utils/AssistantUtils';
 import { generateAndRetrieveImages } from '@/utils/LeonardoUtils';
 
 export const MadisonContext = createContext({
@@ -79,6 +79,7 @@ export const MadisonProvider = ({ children }) => {
   const addUserMessageToThread = async ({
     message,
     threadId,
+    sendOneShotExample = false,
     onTrainingCalled = async () => {},
     onMoodboardCalled = async () => {},
     onInferenceCalled = async () => {},
@@ -86,7 +87,12 @@ export const MadisonProvider = ({ children }) => {
     onTextDone = () => {},
   }) => {
     // Append message to the thread
-    await openai.beta.threads.messages.create(threadId, { role: 'user', content: message });
+    await openai.beta.threads.messages.create(threadId, {
+      role: 'user',
+      content: sendOneShotExample
+        ? `${message}. One-shot example for script: ${oneShotExample}`
+        : message,
+    });
 
     const accumulatedArgs = {};
 

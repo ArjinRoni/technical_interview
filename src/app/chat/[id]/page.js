@@ -424,6 +424,7 @@ const ChatPage = ({ params }) => {
       addUserMessageToThread({
         threadId: currentChat.threadId,
         message: message.text,
+        sendOneShotExample: currentStep === 1 ? true : false,
         onTrainingCalled: handleTrainingCalled,
         onMoodboardCalled: handleMoodboardCalled,
         onInferenceCalled: handleInferenceCalled,
