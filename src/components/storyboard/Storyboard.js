@@ -213,7 +213,7 @@ const Storyboard = ({
       images[shotNumber] = imageUrl;
     });
 
-    onSubmit(prompts, images);
+    onSubmit(Object.values(prompts), Object.values(images));
   };
 
   return (
