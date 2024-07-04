@@ -90,7 +90,7 @@ const ChatPage = ({ params }) => {
         messages__.push(MESSAGES.LOADING);
       } else if (step === STEPS.STYLE_AND_SETTING) {
         messages__.push(MESSAGES.STYLE_AND_SETTING);
-      } else if (step === STEPS.INFERENCE || step === STEPS.STORYBOARD) {
+      } else if (step === STEPS.INFERENCE) {
         messages__.push(MESSAGES.SKELETON);
       } else if (role === 'user') {
         messages__.push(MESSAGES.LOADING);
@@ -187,7 +187,7 @@ const ChatPage = ({ params }) => {
 
       if (
         !lastMessage.isSkeleton &&
-        (currentStep >= STEPS.INFERENCE || lastMessage.text?.includes(finalStepsIdentifierText))
+        (currentStep == STEPS.INFERENCE || lastMessage.text?.includes(finalStepsIdentifierText))
       ) {
         setMessages((prev) => [...prev, MESSAGES.SKELETON]);
       }
@@ -308,7 +308,6 @@ const ChatPage = ({ params }) => {
       messages_.push(MESSAGES.STYLE_AND_SETTING);
     } else if (
       step === STEPS.INFERENCE ||
-      step === STEPS.STORYBOARD ||
       (step === STEPS.MOODBOARD && result?.includes(finalStepsIdentifierText))
     ) {
       messages_.push(MESSAGES.SKELETON);
@@ -670,6 +669,9 @@ const ChatPage = ({ params }) => {
   // Function to handle video generation
   const handleVideoGenerationCalled = async (imagePrompts, imageUrls, simulate = false) => {
     try {
+      // Add a skeleton message
+      setMessages((prev) => [...prev, MESSAGES.SKELETON]);
+
       // TODO: Do we want to update chat properties (see `handleInferenceCalled`)
       const { classificationToken: classificationToken_ } = await getChatDetails(currentChat.id);
 
