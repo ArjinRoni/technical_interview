@@ -33,11 +33,16 @@ async function getGenerationResults(generationId) {
 }
 
 // Example usage function
-export async function generateAndRetrieveImages(prompt, numImages = 1, size = 512) {
+export async function generateAndRetrieveImages(
+  prompt,
+  numImages = 1,
+  size = 512,
+  alchemy = false,
+) {
   try {
     // Send generation request
     const generationData = {
-      alchemy: true,
+      alchemy: alchemy,
       height: size,
       width: size,
       modelId: MODEL_ID,
