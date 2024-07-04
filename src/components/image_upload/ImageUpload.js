@@ -28,6 +28,8 @@ const ImageUpload = ({
   const { user } = useAuth();
   const { storage } = useFB();
 
+  // TODO: Limit user uploads to 6 images
+
   const fileInputRef = useRef(null);
   const buttonRef = useRef(null);
   const [uploading, setUploading] = useState(false);
