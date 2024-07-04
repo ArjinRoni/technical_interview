@@ -36,7 +36,7 @@ async function getGenerationResults(generationId) {
 export async function generateAndRetrieveImages(
   prompt,
   numImages = 1,
-  size = 512,
+  size = 1024,
   alchemy = false,
 ) {
   try {

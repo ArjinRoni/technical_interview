@@ -143,7 +143,7 @@ const ImageUpload = ({
                 ? `Here is your moodboard, ${user?.name?.split(' ')[0].trim()}! Please select the images you like.`
                 : 'Thank you for your selection!'
               : `Thank you for your patience, ${user?.name?.split(' ')[0].trim()}! Here are your ads 🚀 Please let me know if you have any feedback or thoughts.`
-            : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸'])}`}
+            : `Here are my beautiful product images ${randChoice(['💜', '🤩', '🚀', '😍', '🥰', '😸', '🦆', '🦄'])}`}
         </p>
         <div className="upload-square">
           {isActive && !isAI && (
@@ -156,7 +156,7 @@ const ImageUpload = ({
               style={{ display: 'none' }}
             />
           )}
-          <div className="uploaded-images-div" style={{ maxWidth: 728 }}>
+          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 1000 : 728 }}>
             {isActive &&
               !isAI &&
               (uploading ? (
@@ -194,7 +194,7 @@ const ImageUpload = ({
                     height={0}
                     key={index}
                     sizes="100vw"
-                    style={{ width: 'auto', height: isMoodboard ? 256 * 0.885 : 164 }} // optional
+                    style={{ width: 'auto', height: isMoodboard ? 256 * 1.25 : 164 }} // optional
                     src={url}
                     onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />

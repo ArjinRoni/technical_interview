@@ -79,7 +79,6 @@ export const MadisonProvider = ({ children }) => {
   const addUserMessageToThread = async ({
     message,
     threadId,
-    sendOneShotExample = false,
     onTrainingCalled = async () => {},
     onMoodboardCalled = async () => {},
     onInferenceCalled = async () => {},
@@ -87,12 +86,7 @@ export const MadisonProvider = ({ children }) => {
     onTextDone = () => {},
   }) => {
     // Append message to the thread
-    await openai.beta.threads.messages.create(threadId, {
-      role: 'user',
-      content: sendOneShotExample
-        ? `${message}. One-shot example for script: ${oneShotExample}`
-        : message,
-    });
+    await openai.beta.threads.messages.create(threadId, { role: 'user', content: message });
 
     const accumulatedArgs = {};
 
