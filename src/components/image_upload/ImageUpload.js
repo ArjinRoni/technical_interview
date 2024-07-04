@@ -44,6 +44,7 @@ const ImageUpload = ({
 
   // Limit for image upload
   const MIN_IMAGES_REQUIRED = 3;
+  const MAX_IMAGES_ALLOWED = 6;
 
   useEffect(() => {
     if (isAI && imagesInit && imagesInit.length > 0) {
@@ -80,6 +81,12 @@ const ImageUpload = ({
   const onSubmit_ = () => {
     if (!uploadedImages || uploadedImages.length === 0) {
       toast('Please upload images of your product to proceed 📷');
+      return;
+    } else if (uploadedImages.length < MIN_IMAGES_REQUIRED) {
+      toast(`You need to upload a minimum of ${MIN_IMAGES_REQUIRED} product images 📷`);
+      return;
+    } else if (uploadedImages.length > MAX_IMAGES_ALLOWED) {
+      toast(`Please upload a maximum of ${MAX_IMAGES_ALLOWED} product images 📷`);
       return;
     }
 
@@ -207,7 +214,7 @@ const ImageUpload = ({
           !isAI &&
           !uploading &&
           uploadedImages &&
-          uploadedImages.length >= MIN_IMAGES_REQUIRED && (
+          uploadedImages.length > 0 && (
             <div className="image-upload-button-div">
               <Button
                 text="Next"
