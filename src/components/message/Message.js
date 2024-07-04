@@ -126,7 +126,7 @@ const Message = ({
                 <Skeleton count={1} />
               </SkeletonTheme>
             </div>
-            <CountdownProgressTimer minutes={15} />
+            <CountdownProgressTimer minutes={10} />
           </div>
         ) : step && step === STEPS.STORYBOARD ? (
           <Storyboard

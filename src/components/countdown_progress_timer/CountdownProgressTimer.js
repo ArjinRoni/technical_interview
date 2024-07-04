@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import './countdown_progress_timer.css';
 
-const CountdownProgressTimer = ({ minutes = 15 }) => {
-  const totalSeconds = minutes * 60; // 15 minutes in seconds
+const CountdownProgressTimer = ({ minutes = 10 }) => {
+  const totalSeconds = minutes * 60; // Convert minutes to seconds
   const [timeLeft, setTimeLeft] = useState(totalSeconds);
 
   useEffect(() => {
