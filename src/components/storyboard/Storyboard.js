@@ -1,4 +1,3 @@
-'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
@@ -10,7 +9,7 @@ import { useFont } from '@/contexts/FontContext';
 import { useFB } from '@/contexts/FBContext';
 
 import { generateSignedUrls } from '@/utils/MediaUtils';
-import { scaleMotionScale } from '@/utils/MiscUtils';
+import { scaleMotionScale, descaleMotionScale } from '@/utils/MiscUtils';
 
 const PromptInput = ({ placeholder, value, setValue, isActive = true }) => {
   const { secondaryFont } = useFont();
@@ -78,9 +77,9 @@ const ShotTypeDropdown = ({ value, onChange, isActive = true }) => {
         borderRight: '12px solid transparent',
       }}
     >
-      <option value="wide">Wide Shot</option>
-      <option value="medium">Medium Shot</option>
-      <option value="close">Close Up</option>
+      <option value="Wide Shot">Wide Shot</option>
+      <option value="Medium Shot">Medium Shot</option>
+      <option value="Close Up">Close Up</option>
     </select>
   );
 };
@@ -97,9 +96,9 @@ const MotionScaleSlider = ({ value, onChange, isActive = true }) => {
           display: 'flex',
         }}
       >
-        Motion Scale: {value}
+        Motion Scale: {value?.toFixed(2)}
       </label>
-      <div style={{ position: 'relative', width: '100%', height: '7px' }}>
+      <div style={{ position: 'relative', width: '100%', height: '8px', marginTop: 6 }}>
         <input
           type="range"
           min="0"
@@ -110,7 +109,8 @@ const MotionScaleSlider = ({ value, onChange, isActive = true }) => {
           onChange={(e) => onChange(parseFloat(e.target.value))}
           style={{
             width: '100%',
-            height: '7px',
+            height: undefined,
+            top: -6,
             WebkitAppearance: 'none',
             appearance: 'none',
             background: 'transparent',
@@ -183,21 +183,24 @@ const MotionScaleSlider = ({ value, onChange, isActive = true }) => {
 const Shot = ({
   shotNumber,
   isActive = false,
-  promptImagePairs,
+  shotData,
   setLoadedImages,
   onRefresh = async () => {},
 }) => {
   const { primaryFont } = useFont();
-  const [currentPairIndex, setCurrentPairIndex] = useState(promptImagePairs.length - 1);
-  const [[prompt, image]] = Object.entries(promptImagePairs[currentPairIndex]);
+  const [currentIndex, setCurrentIndex] = useState(shotData.length - 1);
+  const { imageUrl, motionScale, prompt, shotType } = shotData[currentIndex];
   const [value, setValue] = useState(prompt);
-  const [shotType, setShotType] = useState('medium');
-  const [motionScale, setMotionScale] = useState(0.5);
+  const [currentShotType, setCurrentShotType] = useState(shotType);
+  const [currentMotionScale, setCurrentMotionScale] = useState(
+    descaleMotionScale(motionScale, shotType),
+  );
 
   useEffect(() => {
-    const [[currentPrompt]] = Object.entries(promptImagePairs[currentPairIndex]);
-    setValue(currentPrompt);
-  }, [currentPairIndex, promptImagePairs]);
+    setValue(prompt);
+    setCurrentShotType(shotType);
+    setCurrentMotionScale(descaleMotionScale(motionScale, shotType));
+  }, [currentIndex, shotData]);
 
   return (
     <div className="storyboard-image-div">
@@ -218,27 +221,27 @@ const Shot = ({
                 await onRefresh({
                   prompt: value,
                   shotNumber: shotNumber,
-                  shotType: shotType,
-                  //motionScale: scaleMotionScale(motionScale),
+                  shotType: currentShotType,
+                  motionScale: scaleMotionScale(currentMotionScale, currentShotType),
                 });
-                setCurrentPairIndex((prev) => prev + 1);
+                setCurrentIndex((prev) => prev + 1);
               }}
             />
           </div>
         )}
       </div>
       <div className="storyboard-image-inner-div">
-        {image ? (
+        {imageUrl ? (
           <Image
             className="storyboard-image"
             alt={`Image ${shotNumber}`}
             width={0}
             height={0}
-            key={`${shotNumber}-${currentPairIndex}`}
+            key={`${shotNumber}-${currentIndex}`}
             sizes="100vw"
             style={{ width: 256 * 1.5, height: 256 * 1.5 * (9 / 16) }} // TODO: Set height to 'auto' later
-            src={image}
-            onLoad={() => setLoadedImages((prev) => ({ ...prev, [image]: true }))}
+            src={imageUrl}
+            onLoad={() => setLoadedImages((prev) => ({ ...prev, [imageUrl]: true }))}
           />
         ) : (
           <SkeletonTheme
@@ -251,23 +254,23 @@ const Shot = ({
           </SkeletonTheme>
         )}
         <div className="storyboard-image-buttons-div">
-          {currentPairIndex > 0 && (
+          {currentIndex > 0 && (
             <img
               style={{ borderRadius: 300 }}
               width={32}
               height={32}
               src="/back-gradient.png"
-              onClick={() => setCurrentPairIndex((prev) => prev - 1)}
+              onClick={() => setCurrentIndex((prev) => prev - 1)}
               alt="Previous"
             />
           )}
-          {currentPairIndex < promptImagePairs.length - 1 && (
+          {currentIndex < shotData.length - 1 && (
             <img
               style={{ borderRadius: 300, marginLeft: 'auto' }}
               width={32}
               height={32}
               src="/forward-gradient.png"
-              onClick={() => setCurrentPairIndex((prev) => prev + 1)}
+              onClick={() => setCurrentIndex((prev) => prev + 1)}
               alt="Next"
             />
           )}
@@ -275,12 +278,21 @@ const Shot = ({
       </div>
       <PromptInput placeholder={prompt} value={value} setValue={setValue} isActive={isActive} />
       <div className="storyboard-end-div">
-        <ShotTypeDropdown value={shotType} onChange={setShotType} isActive={isActive} />
-        <MotionScaleSlider value={motionScale} onChange={setMotionScale} isActive={isActive} />
+        <ShotTypeDropdown
+          value={currentShotType}
+          onChange={setCurrentShotType}
+          isActive={isActive}
+        />
+        <MotionScaleSlider
+          value={currentMotionScale}
+          onChange={setCurrentMotionScale}
+          isActive={isActive}
+        />
       </div>
     </div>
   );
 };
+
 const Storyboard = ({
   isActive = false,
   shotsInit = {},
@@ -289,89 +301,73 @@ const Storyboard = ({
 }) => {
   const { storage } = useFB();
 
-  const [loading, setLoading] = useState(false);
   const [shots, setShots] = useState({});
   const [loadedImages, setLoadedImages] = useState({});
-  const [currentPairIndices, setCurrentPairIndices] = useState({});
-  const [currentPrompts, setCurrentPrompts] = useState({});
 
-  // Hook to download the generated shot images and display to the user
   useEffect(() => {
     if (shotsInit && Object.keys(shotsInit).length > 0) {
       const allImages = Object.values(shotsInit)
         .flat()
-        .map((pair) => Object.values(pair)[0]);
+        .map((shot) => shot.imageUrl);
       generateSignedUrls({
         images: allImages,
         storage: storage,
         setImages: (signedUrls) => {
-          // Update shots with signed URLs
           const updatedShots = { ...shotsInit };
           let urlIndex = 0;
           for (const shotNumber in updatedShots) {
-            updatedShots[shotNumber] = updatedShots[shotNumber].map((pair) => {
-              const [prompt] = Object.keys(pair);
-              return { [prompt]: signedUrls[urlIndex++] };
-            });
+            updatedShots[shotNumber] = updatedShots[shotNumber].map((shot) => ({
+              ...shot,
+              imageUrl: signedUrls[urlIndex++],
+            }));
           }
           setShots(updatedShots);
         },
-        setUploading: setLoading,
+        setUploading: () => {}, // You can add loading state handling here if needed
       });
     }
-  }, [shotsInit]);
+  }, [shotsInit, storage]);
 
-  const onRefresh = async ({ prompt, shotNumber, shotType }) => {
+  const onRefresh = async ({ prompt, shotNumber, shotType, motionScale }) => {
     setShots((prevShots) => {
       const updatedShots = { ...prevShots };
-      updatedShots[shotNumber] = [...updatedShots[shotNumber], { [prompt]: null }];
+      updatedShots[shotNumber] = [
+        ...updatedShots[shotNumber],
+        { prompt, shotType, motionScale, imageUrl: null },
+      ];
       return updatedShots;
     });
-    setCurrentPairIndices((prev) => ({
-      ...prev,
-      [shotNumber]: (prev[shotNumber] || 0) + 1,
-    }));
-    setCurrentPrompts((prev) => ({
-      ...prev,
-      [shotNumber]: prompt,
-    }));
 
-    await handleInferenceRefreshCalled(prompt, shotNumber, shotType);
+    await handleInferenceRefreshCalled(prompt, shotNumber, shotType, motionScale);
   };
 
   const handleSubmit = () => {
-    const prompts = {};
-    const images = {};
-
-    Object.entries(shots).forEach(([shotNumber, promptImagePairs]) => {
-      const currentIndex = currentPairIndices[shotNumber] || promptImagePairs.length - 1;
-      const [[prompt, imageUrl]] = Object.entries(promptImagePairs[currentIndex]);
-
-      prompts[shotNumber] = currentPrompts[shotNumber] || prompt;
-      images[shotNumber] = imageUrl;
+    const finalShots = Object.entries(shots).map(([shotNumber, shotData]) => {
+      const latestShot = shotData[shotData.length - 1];
+      return {
+        prompt: latestShot.prompt,
+        imageUrl: latestShot.imageUrl,
+        shotType: latestShot.shotType,
+        motionScale: scaleMotionScale(latestShot.motionScale, latestShot.shotType),
+      };
     });
 
-    onSubmit(Object.values(prompts), Object.values(images));
+    const prompts = finalShots.map((x) => x.prompt);
+    const imageUrls = finalShots.map((x) => x.imageUrl);
+    const motionScales = finalShots.map((x) => x.motionScale);
+    onSubmit(prompts, imageUrls, motionScales);
   };
 
   return (
     <div className="storyboard-div" style={{ maxWidth: 800 }}>
-      {Object.entries(shots).map(([shotNumber, promptImagePairs]) => (
+      {Object.entries(shots).map(([shotNumber, shotData]) => (
         <Shot
-          key={`${shotNumber}`}
+          key={shotNumber}
           isActive={isActive}
           shotNumber={shotNumber}
-          promptImagePairs={promptImagePairs}
+          shotData={shotData}
           setLoadedImages={setLoadedImages}
           onRefresh={onRefresh}
-          currentPairIndex={currentPairIndices[shotNumber] || promptImagePairs.length - 1}
-          setCurrentPairIndex={(index) =>
-            setCurrentPairIndices((prev) => ({ ...prev, [shotNumber]: index }))
-          }
-          currentPrompt={currentPrompts[shotNumber]}
-          setCurrentPrompt={(prompt) =>
-            setCurrentPrompts((prev) => ({ ...prev, [shotNumber]: prompt }))
-          }
         />
       ))}
       {isActive && (

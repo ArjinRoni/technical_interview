@@ -26,6 +26,7 @@ import {
   isMessageLoading,
   finalStepsIdentifierText,
 } from '@/utils/MessageUtils';
+import { MOTION_SCALE_MIDPOINT } from '@/utils/MiscUtils';
 
 const ChatPage = ({ params }) => {
   // Get the route param -- NOTE: Here it's called `id` but it's actually `chatNo`. We do this to show /1 to the user instead of the long and ugly /<UUID>
@@ -587,11 +588,6 @@ const ChatPage = ({ params }) => {
         return true;
       }
 
-      console.log('Mood: ', moodboardImages);
-      console.log('Train: ', trainingImages);
-      console.log('Image: ', imagePrompts);
-      console.log('Shot: ', ['Medium Shot', 'Medium Shot', 'Medium Shot', 'Medium Shot']);
-
       const response = await fetch(`${process.env.INSTANCE_BASE_URL}/image_generation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -601,7 +597,8 @@ const ChatPage = ({ params }) => {
           training_img_urls: trainingImages,
           image_prompts: imagePrompts,
           shot_number: null,
-          shot_types: ['Medium Shot', 'Medium Shot', 'Medium Shot', 'Medium Shot'],
+          shot_types: ['Medium Shot', 'Medium Shot', 'Medium Shot', 'Medium Shot'], // NOTE: Calling with default shot type params
+          motion_scales: Array(4).fill(MOTION_SCALE_MIDPOINT), // NOTE: Calling with default MIDPOINT value as motion scale
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
           user_id: user.userId,
           chat_id: currentChat.id,
@@ -626,6 +623,7 @@ const ChatPage = ({ params }) => {
     imagePrompt,
     shotNumber,
     shotType,
+    motionScale,
     simulate = false,
   ) => {
     try {
@@ -651,6 +649,7 @@ const ChatPage = ({ params }) => {
           image_prompts: [imagePrompt],
           shot_number: shotNumber,
           shot_types: [shotType],
+          motion_scales: [motionScale],
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
           user_id: user.userId,
           chat_id: currentChat.id,
@@ -671,7 +670,12 @@ const ChatPage = ({ params }) => {
   };
 
   // Function to handle video generation
-  const handleVideoGenerationCalled = async (imagePrompts, imageUrls, simulate = false) => {
+  const handleVideoGenerationCalled = async (
+    imagePrompts,
+    imageUrls,
+    motionScales = [80, 80, 80, 80],
+    simulate = false,
+  ) => {
     try {
       // Add a skeleton message
       setMessages((prev) => [...prev, MESSAGES.SKELETON]);
@@ -691,7 +695,7 @@ const ChatPage = ({ params }) => {
           classification_token: classificationToken_,
           image_prompts: imagePrompts,
           image_urls: imageUrls,
-          motion_scales: [80, 80, 80, 80], // TODO: Change this to be dynamic
+          motion_scales: motionScales,
           lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
           user_id: user.userId,
           chat_id: currentChat.id,

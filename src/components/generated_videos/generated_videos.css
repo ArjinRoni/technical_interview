@@ -1,10 +1,11 @@
 .video {
     border-radius: 16px;
-    width: 164px;
-    height: 164px;
 }
 
 .videos {
     display: flex;
-    gap: 12px;
+    flex-wrap: wrap;
+    row-gap: 24px;
+    column-gap: 16px;
+    max-width: 800px;
 }
