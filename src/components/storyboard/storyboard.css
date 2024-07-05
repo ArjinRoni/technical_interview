@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    row-gap: 32px;
+    row-gap: 40px;
     column-gap: 32px;
 }
 
@@ -79,7 +79,7 @@
 .storyboard-end-div {
     display: flex;
     flex-direction: row;
-    gap: 24px;
+    gap: 20px;
     height: 42px;
     margin-top: 12px;
 }

@@ -12,7 +12,7 @@ import { useFB } from '@/contexts/FBContext';
 import { generateSignedUrls } from '@/utils/MediaUtils';
 import { scaleMotionScale } from '@/utils/MiscUtils';
 
-const PromptInput = ({ placeholder, value, setValue }) => {
+const PromptInput = ({ placeholder, value, setValue, isActive = true }) => {
   const { secondaryFont } = useFont();
   const textareaRef = useRef(null);
 
@@ -37,6 +37,7 @@ const PromptInput = ({ placeholder, value, setValue }) => {
       ref={textareaRef}
       className="storyboard-prompt-input"
       placeholder={'Type your prompt...'}
+      disabled={!isActive}
       style={{
         width,
         minHeight: '40px', // Set a minimum height
@@ -54,13 +55,14 @@ const PromptInput = ({ placeholder, value, setValue }) => {
   );
 };
 
-const ShotTypeDropdown = ({ value, onChange }) => {
+const ShotTypeDropdown = ({ value, onChange, isActive = true }) => {
   const { secondaryFont } = useFont();
 
   return (
     <select
       className="storyboard-shot-type-dropdown"
       value={value}
+      disabled={!isActive}
       onChange={(e) => onChange(e.target.value)}
       style={{
         fontFamily: secondaryFont.style.fontFamily,
@@ -83,38 +85,97 @@ const ShotTypeDropdown = ({ value, onChange }) => {
   );
 };
 
-const MotionScaleSlider = ({ value, onChange }) => {
+const MotionScaleSlider = ({ value, onChange, isActive = true }) => {
   const { secondaryFont } = useFont();
 
   return (
-    <div className="storyboard-motion-scale-slider">
+    <div className="storyboard-motion-scale-slider" style={{ paddingRight: 8 }}>
       <label
         style={{
           fontFamily: secondaryFont.style.fontFamily,
-          fontSize: 14,
+          fontSize: 13,
           display: 'flex',
-          marginBottom: -2.5,
         }}
       >
         Motion Scale: {value}
       </label>
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.1"
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        style={{
-          width: '100%',
-          height: '8px',
-          background: 'linear-gradient(to right, #7063c5, #1e1361)',
-          outline: 'none',
-          opacity: '0.7',
-          transition: 'opacity .2s',
-          borderRadius: '3px',
-        }}
-      />
+      <div style={{ position: 'relative', width: '100%', height: '7px' }}>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.1"
+          disabled={!isActive}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          style={{
+            width: '100%',
+            height: '7px',
+            WebkitAppearance: 'none',
+            appearance: 'none',
+            background: 'transparent',
+            outline: 'none',
+            opacity: isActive ? '1' : '0.9',
+            transition: 'opacity .2s',
+            position: 'relative',
+            zIndex: 3, // Increased z-index
+          }}
+        />
+      </div>
+      <style jsx>{`
+        .storyboard-motion-scale-slider div::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(to right, #7063c5 0%, #1e1361 100%);
+          border-radius: 3px;
+          z-index: 1;
+        }
+        .storyboard-motion-scale-slider div::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: #444;
+          border-radius: 3px;
+          z-index: 2;
+          clip-path: inset(0 0 0 ${value * 100}%);
+        }
+        .storyboard-motion-scale-slider input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 15px;
+          height: 15px;
+          border-radius: 50%;
+          background: #ffffff;
+          cursor: pointer;
+          position: relative;
+          z-index: 4; // Increased z-index
+        }
+        .storyboard-motion-scale-slider input[type='range']::-moz-range-thumb {
+          width: 15px;
+          height: 15px;
+          border-radius: 50%;
+          background: #ffffff;
+          cursor: pointer;
+          position: relative;
+          z-index: 4; // Increased z-index
+        }
+        .storyboard-motion-scale-slider input[type='range']::-ms-thumb {
+          width: 15px;
+          height: 15px;
+          border-radius: 50%;
+          background: #ffffff;
+          cursor: pointer;
+          position: relative;
+          z-index: 4; // Increased z-index
+        }
+      `}</style>
     </div>
   );
 };
@@ -158,7 +219,7 @@ const Shot = ({
                   prompt: value,
                   shotNumber: shotNumber,
                   shotType: shotType,
-                  motionScale: scaleMotionScale(motionScale),
+                  //motionScale: scaleMotionScale(motionScale),
                 });
                 setCurrentPairIndex((prev) => prev + 1);
               }}
@@ -212,10 +273,10 @@ const Shot = ({
           )}
         </div>
       </div>
-      <PromptInput placeholder={prompt} value={value} setValue={setValue} />
+      <PromptInput placeholder={prompt} value={value} setValue={setValue} isActive={isActive} />
       <div className="storyboard-end-div">
-        <ShotTypeDropdown value={shotType} onChange={setShotType} />
-        <MotionScaleSlider value={motionScale} onChange={setMotionScale} />
+        <ShotTypeDropdown value={shotType} onChange={setShotType} isActive={isActive} />
+        <MotionScaleSlider value={motionScale} onChange={setMotionScale} isActive={isActive} />
       </div>
     </div>
   );
@@ -260,7 +321,7 @@ const Storyboard = ({
     }
   }, [shotsInit]);
 
-  const onRefresh = async ({ prompt, shotNumber, shotType, motionScale }) => {
+  const onRefresh = async ({ prompt, shotNumber, shotType }) => {
     setShots((prevShots) => {
       const updatedShots = { ...prevShots };
       updatedShots[shotNumber] = [...updatedShots[shotNumber], { [prompt]: null }];
@@ -275,7 +336,7 @@ const Storyboard = ({
       [shotNumber]: prompt,
     }));
 
-    await handleInferenceRefreshCalled(prompt, shotNumber, shotType, motionScale);
+    await handleInferenceRefreshCalled(prompt, shotNumber, shotType);
   };
 
   const handleSubmit = () => {
