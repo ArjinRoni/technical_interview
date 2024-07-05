@@ -15,6 +15,54 @@ import { useFB } from '@/contexts/FBContext';
 
 import { generateSignedUrls } from '@/utils/MediaUtils';
 
+const MAX_SIZE = 1024;
+
+const resizeImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            resolve(
+              new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              }),
+            );
+          },
+          'image/jpeg',
+          0.7,
+        ); // You can adjust quality here
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const ImageUpload = ({
   isAI = false,
   isActive = true,
@@ -27,8 +75,6 @@ const ImageUpload = ({
 }) => {
   const { user } = useAuth();
   const { storage } = useFB();
-
-  // TODO: Limit user uploads to 6 images
 
   const fileInputRef = useRef(null);
   const buttonRef = useRef(null);
@@ -57,7 +103,6 @@ const ImageUpload = ({
     }
   }, [imagesInit]);
 
-  // TODO: Don't have to cloud write to show images to the user
   const handleUpload = async (e) => {
     e.preventDefault();
     const files = e.target.files;
@@ -66,8 +111,9 @@ const ImageUpload = ({
     setUploading(true);
 
     const uploadPromises = Array.from(files).map(async (file) => {
-      const storageRef = ref(storage, `users/${user.userId}/${chatId}/inputs/${file.name}`);
-      await uploadBytes(storageRef, file);
+      const resizedFile = await resizeImage(file);
+      const storageRef = ref(storage, `users/${user.userId}/${chatId}/inputs/${resizedFile.name}`);
+      await uploadBytes(storageRef, resizedFile);
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
     });
@@ -194,7 +240,11 @@ const ImageUpload = ({
                     height={0}
                     key={index}
                     sizes="100vw"
-                    style={{ width: isMoodboard ? 256 : 164, height: 'auto' }} // optional
+                    style={{
+                      width: isMoodboard ? 256 : 164,
+                      height: 'auto',
+                      minHeight: isMoodboard ? 256 : 164,
+                    }} // optional
                     src={url}
                     onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />
