@@ -199,7 +199,9 @@ const Message = ({
       </div>
       {isAI && !isLoading && (
         <div className="message-actions-box">
-          <img src="/clipboard.png" onClick={() => copyToClipboard()} />
+          {text && text.length > 0 && (
+            <img src="/clipboard.png" onClick={() => copyToClipboard()} />
+          )}
           <img
             src={localRating === 1 ? '/thumbs-up-filled.png' : '/thumbs-up.png'}
             onClick={() => updateRating(localRating === 1 ? 0 : 1)}

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ import Image from '../image/Image';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
+import { useUI } from '@/contexts/UIContext';
 
 import { generateSignedUrls } from '@/utils/MediaUtils';
 
@@ -75,7 +76,11 @@ const ImageUpload = ({
 }) => {
   const { user } = useAuth();
   const { storage } = useFB();
+  const { isSidebarOpen } = useUI();
 
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [imageSize, setImageSize] = useState(0);
+  const containerRef = useRef(null);
   const fileInputRef = useRef(null);
   const buttonRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -91,6 +96,55 @@ const ImageUpload = ({
   // Limit for image upload
   const MIN_IMAGES_REQUIRED = 3;
   const MAX_IMAGES_ALLOWED = 6;
+
+  // Set min and max sizes
+  const maxSize = isMoodboard ? 400 : 300;
+
+  // Hook for handling resizing
+  const calculateImageSize = useCallback(() => {
+    return containerWidth * 0.33 - (isMoodboard ? 84 : 12);
+  }, [containerWidth, isMoodboard]);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        let newWidth;
+        if (isMoodboard) {
+          newWidth = (window.innerWidth - (isSidebarOpen ? 192 : 0)) * 0.85;
+          newWidth = newWidth > 1256 ? 1256 : newWidth;
+        } else {
+          newWidth = containerRef.current.offsetWidth;
+          newWidth = newWidth > 1028 ? 1028 : newWidth;
+        }
+
+        newWidth = newWidth < 500 ? 500 : newWidth;
+        setContainerWidth(newWidth);
+      }
+    };
+
+    // Initial size calculation
+    updateSize();
+
+    // Set up resize observer and window resize listener
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    window.addEventListener('resize', updateSize);
+
+    // Clean up
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+      window.removeEventListener('resize', updateSize);
+    };
+  }, [isMoodboard, isSidebarOpen]);
+
+  useEffect(() => {
+    setImageSize(calculateImageSize());
+  }, [containerWidth, calculateImageSize]);
 
   useEffect(() => {
     if (isAI && imagesInit && imagesInit.length > 0) {
@@ -202,7 +256,16 @@ const ImageUpload = ({
               style={{ display: 'none' }}
             />
           )}
-          <div className="uploaded-images-div" style={{ maxWidth: isMoodboard ? 1028 : 728 }}>
+          <div
+            ref={containerRef}
+            className="uploaded-images-div"
+            style={{
+              maxWidth: isMoodboard ? 1256 : 1028,
+              minWidth: 500,
+              display: 'flex',
+              flexWrap: 'wrap',
+            }}
+          >
             {isActive &&
               !isAI &&
               (uploading ? (
@@ -213,7 +276,18 @@ const ImageUpload = ({
                   isDark={true}
                 />
               ) : (
-                <div ref={buttonRef} className="upload-image-box" onClick={handleClickUpload}>
+                <div
+                  ref={buttonRef}
+                  className="upload-image-box"
+                  onClick={handleClickUpload}
+                  style={{
+                    width: `${imageSize}px`,
+                    height: `${imageSize}px`,
+                    maxWidth: maxSize,
+                    maxHeight: maxSize,
+                    flexShrink: 0,
+                  }}
+                >
                   <img style={{ height: 56, width: 56 }} src="/upload.png" />
                 </div>
               ))}
@@ -226,6 +300,13 @@ const ImageUpload = ({
                   className="uploaded-image-wrapper"
                   onMouseEnter={() => handleMouseEnter(index)}
                   onMouseLeave={handleMouseLeave}
+                  style={{
+                    width: `${imageSize}px`,
+                    height: `${imageSize}px`,
+                    maxWidth: maxSize,
+                    maxHeight: maxSize,
+                    flexShrink: 0,
+                  }}
                 >
                   {isActive && isMoodboard && loadedImages[url] && (
                     <Checkbox
@@ -241,10 +322,10 @@ const ImageUpload = ({
                     key={index}
                     sizes="100vw"
                     style={{
-                      width: isMoodboard ? 256 : 164,
-                      height: 'auto',
-                      minHeight: isMoodboard ? 256 : 164,
-                    }} // optional
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
                     src={url}
                     onLoad={() => setLoadedImages((prev) => ({ ...prev, [url]: true }))}
                   />

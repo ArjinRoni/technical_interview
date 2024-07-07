@@ -1,13 +1,50 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { ref, getDownloadURL } from 'firebase/storage';
 
 import './generated_videos.css';
 
+import { useAuth } from '@/contexts/AuthContext';
 import { useFB } from '@/contexts/FBContext';
 
 const GeneratedVideos = ({ chatId, videos }) => {
+  const { user } = useAuth();
   const { storage } = useFB();
   const [signedUrls, setSignedUrls] = useState(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [videoSize, setVideoSize] = useState(0);
+  const containerRef = useRef(null);
+
+  const calculateVideoSize = useCallback(() => {
+    return containerWidth * 0.5 - 20;
+  }, [containerWidth]);
+
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        let newWidth = containerRef.current.offsetWidth;
+        setContainerWidth(newWidth);
+      }
+    };
+
+    updateSize();
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+      window.removeEventListener('resize', updateSize);
+    };
+  }, []);
+
+  useEffect(() => {
+    setVideoSize(calculateVideoSize());
+  }, [containerWidth, calculateVideoSize]);
 
   useEffect(() => {
     const generateSignedUrls = async (images) => {
@@ -55,7 +92,7 @@ const GeneratedVideos = ({ chatId, videos }) => {
   };
 
   return (
-    <div>
+    <div ref={containerRef} style={{ maxWidth: 1256, width: '100%' }}>
       <p
         style={{
           color: '#FFFFFF',
@@ -63,7 +100,7 @@ const GeneratedVideos = ({ chatId, videos }) => {
           marginBottom: 24,
         }}
       >
-        Please find your advertisements below! 🎉
+        Here are your video advertisements, {user?.name?.split(' ')[0]?.trim()}! 🎉
       </p>
       <div className="videos">
         {signedUrls &&
@@ -71,7 +108,7 @@ const GeneratedVideos = ({ chatId, videos }) => {
           signedUrls.map((url, index) => (
             <div key={index} style={{ position: 'relative' }}>
               <video
-                style={{ width: 256 * 1.525, height: 'auto' }}
+                style={{ width: `${videoSize}px`, height: 'auto' }}
                 className="video"
                 autoPlay
                 muted

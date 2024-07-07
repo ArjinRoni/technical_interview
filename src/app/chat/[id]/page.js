@@ -779,7 +779,7 @@ const ChatPage = ({ params }) => {
     <div className="chat-page">
       <Sidebar />
       <Glow />
-      <div className="chat-panel" style={{ marginLeft: isSidebarOpen ? 216 : 0 }}>
+      <div className="chat-panel" style={{ marginLeft: isSidebarOpen ? 192 : 0 }}>
         {hasMessages && (
           <div className="chat-header">
             <img

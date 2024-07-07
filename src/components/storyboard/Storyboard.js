@@ -1,8 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import './storyboard.css';
 
+import Image from '../image/Image';
 import Button from '../button/Button';
 
 import { useFont } from '@/contexts/FontContext';
@@ -11,11 +11,10 @@ import { useFB } from '@/contexts/FBContext';
 import { generateSignedUrls } from '@/utils/MediaUtils';
 import { scaleMotionScale, descaleMotionScale } from '@/utils/MiscUtils';
 
-const PromptInput = ({ placeholder, value, setValue, isActive = true }) => {
+const PromptInput = ({ placeholder, value, setValue, isActive = true, width = 0 }) => {
   const { secondaryFont } = useFont();
-  const textareaRef = useRef(null);
 
-  const width = 256 * 1.5;
+  const textareaRef = useRef(null);
 
   // Function to adjust the height of the textarea
   const adjustHeight = () => {
@@ -182,6 +181,7 @@ const MotionScaleSlider = ({ value, onChange, isActive = true }) => {
 
 const Shot = ({
   shotNumber,
+  imageSize = 0,
   isActive = false,
   shotData,
   setLoadedImages,
@@ -230,7 +230,7 @@ const Shot = ({
           </div>
         )}
       </div>
-      <div className="storyboard-image-inner-div">
+      <div className="storyboard-image-inner-div" style={{ width: `${imageSize}px` }}>
         {imageUrl ? (
           <Image
             className="storyboard-image"
@@ -239,7 +239,10 @@ const Shot = ({
             height={0}
             key={`${shotNumber}-${currentIndex}`}
             sizes="100vw"
-            style={{ width: 256 * 1.5, height: 256 * 1.5 * (9 / 16) }} // TODO: Set height to 'auto' later
+            style={{
+              width: `${imageSize}px`,
+              height: `${imageSize * (9 / 16)}px`,
+            }}
             src={imageUrl}
             onLoad={() => setLoadedImages((prev) => ({ ...prev, [imageUrl]: true }))}
           />
@@ -247,8 +250,8 @@ const Shot = ({
           <SkeletonTheme
             baseColor="#202020"
             highlightColor="#444444"
-            width={256 * 1.5}
-            height={256 * 1.5 * (9 / 16) - 2}
+            width={imageSize}
+            height={imageSize * (9 / 16)}
           >
             <Skeleton count={1} style={{ marginBottom: 6 }} />
           </SkeletonTheme>
@@ -276,8 +279,14 @@ const Shot = ({
           )}
         </div>
       </div>
-      <PromptInput placeholder={prompt} value={value} setValue={setValue} isActive={isActive} />
-      <div className="storyboard-end-div">
+      <PromptInput
+        placeholder={prompt}
+        value={value}
+        setValue={setValue}
+        isActive={isActive}
+        width={imageSize}
+      />
+      <div className="storyboard-end-div" style={{ width: `${imageSize}px` }}>
         <ShotTypeDropdown
           value={currentShotType}
           onChange={setCurrentShotType}
@@ -303,6 +312,43 @@ const Storyboard = ({
 
   const [shots, setShots] = useState({});
   const [loadedImages, setLoadedImages] = useState({});
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [imageSize, setImageSize] = useState(0);
+  const containerRef = useRef(null);
+
+  // Function to calculate image size
+  const calculateImageSize = useCallback(() => {
+    return containerWidth * 0.5 - 20;
+  }, [containerWidth]);
+
+  // Hook to update size of container
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        let newWidth = containerRef.current.offsetWidth;
+        setContainerWidth(newWidth);
+      }
+    };
+
+    updateSize();
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      if (containerRef.current) {
+        resizeObserver.unobserve(containerRef.current);
+      }
+      window.removeEventListener('resize', updateSize);
+    };
+  }, []);
+
+  // Hook to calculate image size
+  useEffect(() => {
+    setImageSize(calculateImageSize());
+  }, [containerWidth, calculateImageSize]);
 
   useEffect(() => {
     if (shotsInit && Object.keys(shotsInit).length > 0) {
@@ -359,10 +405,11 @@ const Storyboard = ({
   };
 
   return (
-    <div className="storyboard-div" style={{ maxWidth: 800 }}>
+    <div ref={containerRef} className="storyboard-div" style={{ width: '100%' }}>
       {Object.entries(shots).map(([shotNumber, shotData]) => (
         <Shot
           key={shotNumber}
+          imageSize={imageSize}
           isActive={isActive}
           shotNumber={shotNumber}
           shotData={shotData}
