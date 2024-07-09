@@ -20,7 +20,8 @@ const PromptInput = ({ placeholder, value, setValue, isActive = true, width = 0 
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 64); // Limit max height to 64px
+      textareaRef.current.style.height = `${newHeight}px`;
     }
   };
 
@@ -354,7 +355,8 @@ const Storyboard = ({
     if (shotsInit && Object.keys(shotsInit).length > 0) {
       const allImages = Object.values(shotsInit)
         .flat()
-        .map((shot) => shot.imageUrl);
+        .map((shot) => shot.imageUrl)
+        .filter((imageUrl) => imageUrl);
       generateSignedUrls({
         images: allImages,
         storage: storage,
