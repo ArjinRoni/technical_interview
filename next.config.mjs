@@ -5,6 +5,7 @@ const nextConfig = {
     ASSISTANT_ID: process.env.ASSISTANT_ID,
     ACCESS_CODE: process.env.ACCESS_CODE,
     INSTANCE_BASE_URL: process.env.INSTANCE_BASE_URL,
+    INSTANCE_CERTIFICATE: process.env.INSTANCE_CERTIFICATE,
     MIXPANEL_TOKEN: process.env.MIXPANEL_TOKEN,
     LEONARDO_TOKEN: process.env.LEONARDO_TOKEN,
   },

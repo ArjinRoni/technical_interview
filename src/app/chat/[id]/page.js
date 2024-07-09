@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ref, uploadBytes, uploadString } from 'firebase/storage';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
+import fetch from 'node-fetch';
 import '../../../styles/chat.css';
 
 import { Sidebar, Glow, UserInput, Message, Progress, LanguagePicker } from '@/components';
@@ -465,16 +466,20 @@ const ChatPage = ({ params }) => {
       }
 
       // Send the request to start the training process
-      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/training`, {
+      const response = await fetch('/api/instance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          business_description: businessDescription,
-          classification_token: classificationToken,
-          image_urls: imageUrls,
-          file_name: `${user.userId}::${currentChat.id}`,
-          user_id: user.userId,
-          chat_id: currentChat.id,
+          url: `${process.env.INSTANCE_BASE_URL}/training`,
+          method: 'POST',
+          body: {
+            business_description: businessDescription,
+            classification_token: classificationToken,
+            image_urls: imageUrls,
+            file_name: `${user.userId}::${currentChat.id}`,
+            user_id: user.userId,
+            chat_id: currentChat.id,
+          },
         }),
       });
 
@@ -588,20 +593,24 @@ const ChatPage = ({ params }) => {
         return true;
       }
 
-      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/image_generation`, {
+      const response = await fetch('/api/instance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          classification_token: classificationToken,
-          moodboard_img_urls: moodboardImages,
-          training_img_urls: trainingImages,
-          image_prompts: imagePrompts,
-          shot_number: null,
-          shot_types: ['Medium Shot', 'Medium Shot', 'Medium Shot', 'Medium Shot'], // NOTE: Calling with default shot type params
-          motion_scales: Array(4).fill(MOTION_SCALE_MIDPOINT), // NOTE: Calling with default MIDPOINT value as motion scale
-          lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
-          user_id: user.userId,
-          chat_id: currentChat.id,
+          url: `${process.env.INSTANCE_BASE_URL}/image_generation`,
+          method: 'POST',
+          body: {
+            classification_token: classificationToken,
+            moodboard_img_urls: moodboardImages,
+            training_img_urls: trainingImages,
+            image_prompts: imagePrompts,
+            shot_number: null,
+            shot_types: ['Medium Shot', 'Medium Shot', 'Medium Shot', 'Medium Shot'],
+            motion_scales: Array(4).fill(MOTION_SCALE_MIDPOINT),
+            lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
+            user_id: user.userId,
+            chat_id: currentChat.id,
+          },
         }),
       });
 
@@ -639,20 +648,24 @@ const ChatPage = ({ params }) => {
         return true;
       }
 
-      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/image_generation`, {
+      const response = await fetch('/api/instance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          classification_token: classificationToken_,
-          moodboard_img_urls: moodboardImages,
-          training_img_urls: trainingImages,
-          image_prompts: [imagePrompt],
-          shot_number: shotNumber,
-          shot_types: [shotType],
-          motion_scales: [motionScale],
-          lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
-          user_id: user.userId,
-          chat_id: currentChat.id,
+          url: `${process.env.INSTANCE_BASE_URL}/image_generation`,
+          method: 'POST',
+          body: {
+            classification_token: classificationToken_,
+            moodboard_img_urls: moodboardImages,
+            training_img_urls: trainingImages,
+            image_prompts: [imagePrompt],
+            shot_number: shotNumber,
+            shot_types: [shotType],
+            motion_scales: [motionScale],
+            lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
+            user_id: user.userId,
+            chat_id: currentChat.id,
+          },
         }),
       });
 
@@ -688,17 +701,21 @@ const ChatPage = ({ params }) => {
         return true;
       }
 
-      const response = await fetch(`${process.env.INSTANCE_BASE_URL}/video_generation`, {
+      const response = await fetch('/api/instance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          classification_token: classificationToken_,
-          image_prompts: imagePrompts,
-          image_urls: imageUrls,
-          motion_scales: motionScales,
-          lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
-          user_id: user.userId,
-          chat_id: currentChat.id,
+          url: `${process.env.INSTANCE_BASE_URL}/video_generation`,
+          method: 'POST',
+          body: {
+            classification_token: classificationToken_,
+            image_prompts: imagePrompts,
+            image_urls: imageUrls,
+            motion_scales: motionScales,
+            lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
+            user_id: user.userId,
+            chat_id: currentChat.id,
+          },
         }),
       });
 
