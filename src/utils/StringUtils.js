@@ -8,7 +8,7 @@ export function getInitials(name) {
 // Function to process steps from the chatbot responses, e.g., [1], [2], [3]
 export function processStep(text) {
   let lastStep = 0;
-  const text_ = text.replaceAll(/\[(\d+)\]/g, (match, number) => {
+  const text_ = text?.replaceAll(/\[(\d+)\]/g, (match, number) => {
     lastStep = Math.max(lastStep, parseInt(number, 10));
     return ''; // Return the original match to preserve it in the text
   });
@@ -29,10 +29,10 @@ export function processSuggestions(text) {
 
 // Function that replaces single newlines with double newlines
 export const formatNewLines = (text) => {
-  return text.replaceAll('/(?<!\n)\n(?!\n)/g', '\n\n');
+  return text?.replaceAll('/(?<!\n)\n(?!\n)/g', '\n\n');
 };
 
 // Function that formats new lines for Markdown -- see https://stackoverflow.com/questions/69026492/adding-multiple-line-break-in-react-markdown
 export const formatMarkdownNewLines = (text) => {
-  return text.replaceAll('\n', '&nbsp; \n\n');
+  return text?.replaceAll('\n', '&nbsp; \n\n');
 };
