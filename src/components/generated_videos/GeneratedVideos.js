@@ -47,9 +47,17 @@ const GeneratedVideos = ({ chatId, videos }) => {
   }, [containerWidth, calculateVideoSize]);
 
   useEffect(() => {
-    const generateSignedUrls = async (images) => {
+    const generateSignedUrls = async (videosInput) => {
       let signedUrls_ = [];
-      for (const video of videos) {
+      let videoUrls = [];
+
+      if (Array.isArray(videosInput)) {
+        videoUrls = videosInput;
+      } else if (typeof videosInput === 'object' && videosInput !== null) {
+        videoUrls = Object.values(videosInput).flatMap((arr) => arr[0].videoUrl);
+      }
+
+      for (const video of videoUrls) {
         let storageFilepath = video.split('://')[1]; // To remove the https:// part
         storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
 
@@ -60,10 +68,10 @@ const GeneratedVideos = ({ chatId, videos }) => {
       setSignedUrls(signedUrls_);
     };
 
-    if (videos && videos.length > 0) {
+    if (videos) {
       generateSignedUrls(videos);
     }
-  }, [videos]);
+  }, [videos, storage]);
 
   const handleDownload = async (url, index) => {
     try {

@@ -146,7 +146,7 @@ const Message = ({
             onSubmit={(urls) => handleImageUpload(urls)}
             onSubmitMoodboard={(images) => handleMoodboardImageSelection(images)}
           />
-        ) : videos && videos.length > 0 ? (
+        ) : videos && (videos.length > 0 || typeof videos === 'object') ? (
           <GeneratedVideos chatId={chatId} videos={videos} />
         ) : (
           <div className="message-text" style={{ color: isAI ? 'white' : 'white' }}>
