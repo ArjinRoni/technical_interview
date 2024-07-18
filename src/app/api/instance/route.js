@@ -9,6 +9,7 @@ const agent = new https.Agent({
 
 export async function POST(request) {
   const { url, method, body, headers } = await request.json();
+  console.log('Sending request to: ', url);
 
   try {
     const response = await fetch(url, {
