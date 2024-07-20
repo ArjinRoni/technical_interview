@@ -93,7 +93,11 @@ const ImageUpload = ({
 
   // Set which images to use for displaying to the user
   const usedImages =
-    isActive || !isMoodboard ? (isActive ? localImages : uploadedImages) : selectedImages;
+    isActive || !isMoodboard
+      ? isActive && !isMoodboard
+        ? localImages
+        : uploadedImages
+      : selectedImages;
 
   // Limit for image upload
   const MIN_IMAGES_REQUIRED = 3;
