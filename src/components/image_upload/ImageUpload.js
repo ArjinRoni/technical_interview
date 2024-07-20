@@ -86,12 +86,14 @@ const ImageUpload = ({
   const [uploading, setUploading] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [uploadedImages, setUploadedImages] = useState(isAI ? [] : imagesInit);
+  const [localImages, setLocalImages] = useState([]);
   const [loadedImages, setLoadedImages] = useState({});
   const [selectedImages, setSelectedImages] = useState(isMoodboard ? selectedImagesInit : null); // Selected images for the moodboard
   const [showMoodboardSubmit, setShowMoodboardSubmit] = useState(isMoodboard && isActive);
 
   // Set which images to use for displaying to the user
-  const usedImages = isActive || !isMoodboard ? uploadedImages : selectedImages;
+  const usedImages =
+    isActive || !isMoodboard ? (isActive ? localImages : uploadedImages) : selectedImages;
 
   // Limit for image upload
   const MIN_IMAGES_REQUIRED = 3;
@@ -157,38 +159,55 @@ const ImageUpload = ({
     }
   }, [imagesInit]);
 
+  const uploadToCloud = async (file) => {
+    const resizedFile = await resizeImage(file);
+    const storageRef = ref(storage, `users/${user.userId}/${chatId}/inputs/${resizedFile.name}`);
+    await uploadBytes(storageRef, resizedFile);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  };
+
   const handleUpload = async (e) => {
     e.preventDefault();
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    setUploading(true);
+    const newLocalImages = files.map((file) => URL.createObjectURL(file));
+    setLocalImages((prevImages) => [...prevImages, ...newLocalImages]);
 
-    const uploadPromises = Array.from(files).map(async (file) => {
-      const resizedFile = await resizeImage(file);
-      const storageRef = ref(storage, `users/${user.userId}/${chatId}/inputs/${resizedFile.name}`);
-      await uploadBytes(storageRef, resizedFile);
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
+    const uploadPromises = files.map(async (file) => {
+      try {
+        const url = await uploadToCloud(file);
+        setUploadedImages((prevImages) => [...prevImages, url]);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast.error('Failed to upload image. Please try again.');
+      }
     });
 
-    const urls = await Promise.all(uploadPromises);
-    setUploadedImages((prevImages) => [...prevImages, ...urls]);
-    setTimeout(() => setUploading(false), 500);
+    Promise.all(uploadPromises).then(() => {
+      setUploading(false);
+    });
   };
 
   // Function to handle form submit
-  const onSubmit_ = () => {
-    if (!uploadedImages || uploadedImages.length === 0) {
+  const onSubmit_ = async () => {
+    if (localImages.length === 0) {
       toast('Please upload images of your product to proceed 📷');
       return;
-    } else if (uploadedImages.length < MIN_IMAGES_REQUIRED) {
+    } else if (localImages.length < MIN_IMAGES_REQUIRED) {
       toast(`You need to upload a minimum of ${MIN_IMAGES_REQUIRED} product images 📷`);
       return;
-    } else if (uploadedImages.length > MAX_IMAGES_ALLOWED) {
+    } else if (localImages.length > MAX_IMAGES_ALLOWED) {
       toast(`Please upload a maximum of ${MAX_IMAGES_ALLOWED} product images 📷`);
       return;
     }
+
+    setUploading(true);
+    while (uploadedImages.length < localImages.length) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    setUploading(false);
 
     onSubmit([...new Set(uploadedImages)]);
   };
@@ -206,6 +225,7 @@ const ImageUpload = ({
 
   // Function to handle discarding images
   const handleDiscardImage = (index) => {
+    setLocalImages((prevImages) => prevImages.filter((_, i) => i !== index));
     setUploadedImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
 
