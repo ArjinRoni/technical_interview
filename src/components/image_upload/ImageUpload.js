@@ -18,6 +18,34 @@ import { generateSignedUrls } from '@/utils/MediaUtils';
 
 const MAX_SIZE = 1024;
 
+// Function to convert images to PNG
+const convertToPNG = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        canvas.toBlob((blob) => {
+          resolve(
+            new File([blob], file.name.replace(/\.[^/.]+$/, '') + '.png', {
+              type: 'image/png',
+              lastModified: Date.now(),
+            }),
+          );
+        }, 'image/png');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const resizeImage = (file) => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -45,18 +73,14 @@ const resizeImage = (file) => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            resolve(
-              new File([blob], file.name, {
-                type: 'image/jpeg',
-                lastModified: Date.now(),
-              }),
-            );
-          },
-          'image/jpeg',
-          0.7,
-        ); // You can adjust quality here
+        canvas.toBlob((blob) => {
+          resolve(
+            new File([blob], file.name.replace(/\.[^/.]+$/, '') + '.png', {
+              type: 'image/png',
+              lastModified: Date.now(),
+            }),
+          );
+        }, 'image/png');
       };
       img.src = e.target.result;
     };
@@ -163,20 +187,28 @@ const ImageUpload = ({
     }
   }, [imagesInit]);
 
+  // Function to upload a file to the cloud
   const uploadToCloud = async (file) => {
-    const resizedFile = await resizeImage(file);
+    const pngFile = await convertToPNG(file);
+    const resizedFile = await resizeImage(pngFile);
     const storageRef = ref(storage, `users/${user.userId}/${chatId}/inputs/${resizedFile.name}`);
     await uploadBytes(storageRef, resizedFile);
     const downloadURL = await getDownloadURL(storageRef);
     return downloadURL;
   };
 
+  // Function to handle the upload
   const handleUpload = async (e) => {
     e.preventDefault();
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    const newLocalImages = files.map((file) => URL.createObjectURL(file));
+    const newLocalImages = await Promise.all(
+      files.map(async (file) => {
+        const pngFile = await convertToPNG(file);
+        return URL.createObjectURL(pngFile);
+      }),
+    );
     setLocalImages((prevImages) => [...prevImages, ...newLocalImages]);
 
     const uploadPromises = files.map(async (file) => {
