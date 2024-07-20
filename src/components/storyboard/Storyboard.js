@@ -56,31 +56,99 @@ const PromptInput = ({ placeholder, value, setValue, isActive = true, width = 0 
 
 const ShotTypeDropdown = ({ value, onChange, isActive = true }) => {
   const { secondaryFont } = useFont();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const options = [
+    { value: 'Wide Shot', label: 'Wide Shot' },
+    { value: 'Medium Shot', label: 'Medium Shot' },
+    { value: 'Close Up', label: 'Close Up' },
+  ];
+
+  const handleToggle = () => {
+    if (isActive) {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  const handleOptionClick = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
-    <select
-      className="storyboard-shot-type-dropdown"
-      value={value}
-      disabled={!isActive}
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        fontFamily: secondaryFont.style.fontFamily,
-        width: '50%',
-        padding: '8px',
-        paddingRight: '24px',
-        paddingLeft: '8px',
-        borderRadius: '4px',
-        border: 'none',
-        background: '#202020',
-        color: '#fff',
-        cursor: 'pointer',
-        borderRight: '12px solid transparent',
-      }}
+    <div
+      ref={dropdownRef}
+      className="storyboard-shot-type-dropdown-div"
+      style={{ position: 'relative' }}
     >
-      <option value="Wide Shot">Wide Shot</option>
-      <option value="Medium Shot">Medium Shot</option>
-      <option value="Close Up">Close Up</option>
-    </select>
+      <div
+        onClick={handleToggle}
+        style={{
+          fontFamily: secondaryFont.style.fontFamily,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          padding: '8px',
+          borderRadius: '4px',
+          background: '#202020',
+          color: '#fff',
+          cursor: isActive ? 'pointer' : 'default',
+          opacity: isActive ? 1 : 0.5,
+        }}
+      >
+        <span style={{ fontSize: 14 }}>{value}</span>
+        <span className="dropdown-arrow">▼</span>
+      </div>
+      {isOpen && (
+        <ul
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            margin: 0,
+            padding: 0,
+            listStyle: 'none',
+            background: '#202020',
+            border: '1px solid #444',
+            borderTop: 'none',
+            borderRadius: '0 0 4px 4px',
+            zIndex: 10,
+          }}
+        >
+          {options.map((option) => (
+            <li
+              key={option.value}
+              onClick={() => handleOptionClick(option.value)}
+              style={{
+                padding: '8px',
+                cursor: 'pointer',
+                fontFamily: secondaryFont.style.fontFamily,
+                color: '#fff',
+                fontSize: 14,
+              }}
+            >
+              {option.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 };
 
