@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { ref, uploadBytes, uploadString } from 'firebase/storage';
+import { ref, uploadBytes, uploadString, getDownloadURL } from 'firebase/storage';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import fetch from 'node-fetch';
@@ -27,6 +27,7 @@ import {
   isMessageLoading,
   finalStepsIdentifierText,
 } from '@/utils/MessageUtils';
+import { handleLeonardoVideoGeneration } from '@/utils/LeonardoUtils';
 import { MOTION_SCALE_MIDPOINT } from '@/utils/MiscUtils';
 
 const ChatPage = ({ params }) => {
@@ -682,18 +683,77 @@ const ChatPage = ({ params }) => {
     }
   };
 
+  // Function to upload videos to storage
+  async function uploadVideosToStorage(videoUrls, userId, chatId, storage) {
+    const uploadedVideos = {};
+
+    for (let [index, videoUrl] of videoUrls.entries()) {
+      try {
+        // Fetch the video file
+        const response = await fetch(videoUrl);
+        const videoBlob = await response.blob();
+
+        // Create a unique filename
+        const filename = `${uuidv4()}.mp4`;
+        const filePath = `users/${userId}/${chatId}/outputs/videos/${filename}`;
+
+        // Create a reference to the file location in Firebase Storage
+        const storageRef = ref(storage, filePath);
+
+        // Upload to Firebase Storage
+        await uploadBytes(storageRef, videoBlob);
+
+        // Get the download URL
+        const url = await getDownloadURL(storageRef);
+
+        uploadedVideos[index + 1] = [{ videoUrl: url }];
+      } catch (error) {
+        console.error(`Error uploading video ${index + 1}:`, error);
+      }
+    }
+
+    return uploadedVideos;
+  }
+
+  // Function save videos to DB
+  async function saveVideosToDB(uploadedVideos, chatId, imagePrompts, motionScales) {
+    // Prepare the videos object
+    const videos = {};
+    for (const [key, value] of Object.entries(uploadedVideos)) {
+      videos[key] = [
+        {
+          videoUrl: value[0].videoUrl,
+          prompt: imagePrompts[parseInt(key) - 1],
+          motionScale: motionScales[parseInt(key) - 1],
+        },
+      ];
+    }
+
+    // Create a new message
+    const message = {
+      id: uuidv4(),
+      role: 'assistant',
+      text: null,
+      videos: videos,
+      step: STEPS.VIDEOS,
+      rating: 0,
+    };
+
+    await createMessage({ message: message, chatId: chatId });
+  }
+
   // Function to handle video generation
   const handleVideoGenerationCalled = async (
     imagePrompts,
     imageUrls,
     motionScales = [80, 80, 80, 80],
     simulate = false,
+    useLeonardoAI = true, // TODO: Can we use an environment variable here?
   ) => {
     try {
       // Add a skeleton message
       setMessages((prev) => [...prev, MESSAGES.SKELETON]);
 
-      // TODO: Do we want to update chat properties (see `handleInferenceCalled`)
       const { classificationToken: classificationToken_ } = await getChatDetails(currentChat.id);
 
       if (simulate) {
@@ -701,30 +761,52 @@ const ChatPage = ({ params }) => {
         return true;
       }
 
-      const response = await fetch('/api/instance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: `${process.env.INSTANCE_BASE_URL}/video_generation`,
-          method: 'POST',
-          body: {
-            classification_token: classificationToken_,
-            image_prompts: imagePrompts,
-            image_urls: imageUrls,
-            motion_scales: motionScales,
-            lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
-            user_id: user.userId,
-            chat_id: currentChat.id,
-          },
-        }),
-      });
+      if (useLeonardoAI) {
+        // LeonardoAI API implementation
+        const videoUrls = await handleLeonardoVideoGeneration(imageUrls, motionScales, storage);
 
-      if (response.ok) {
-        console.log('Video generation initiated with response:', response); // Inference initiated successfully
+        // Upload videos to Firebase Storage
+        const uploadedVideos = await uploadVideosToStorage(
+          videoUrls,
+          user.userId,
+          currentChat.id,
+          storage,
+        );
+
+        // Save video information to Firestore
+        await saveVideosToDB(uploadedVideos, currentChat.id, imagePrompts, motionScales);
+
+        // Remove the skeleton message (we only do for Leonardo as it's messaged in this thread)
+        setMessages((prev) => [...prev.filter((x) => !x.isSkeleton)]);
+
         return true;
       } else {
-        console.error('Failed to complete video generation'); // Handle error case
-        return false;
+        // Original implementation
+        const response = await fetch('/api/instance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: `${process.env.INSTANCE_BASE_URL}/video_generation`,
+            method: 'POST',
+            body: {
+              classification_token: classificationToken_,
+              image_prompts: imagePrompts,
+              image_urls: imageUrls,
+              motion_scales: motionScales,
+              lora_file_name: `${user.userId}::${currentChat.id}.safetensors`,
+              user_id: user.userId,
+              chat_id: currentChat.id,
+            },
+          }),
+        });
+
+        if (response.ok) {
+          console.log('Video generation initiated with response:', response);
+          return true;
+        } else {
+          console.error('Failed to complete video generation');
+          return false;
+        }
       }
     } catch (error) {
       console.error('Error triggering video generation:', error);

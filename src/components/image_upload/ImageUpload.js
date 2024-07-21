@@ -124,8 +124,8 @@ const ImageUpload = ({
       : selectedImages;
 
   // Limit for image upload
-  const MIN_IMAGES_REQUIRED = 3;
-  const MAX_IMAGES_ALLOWED = 6;
+  const MIN_IMAGES_REQUIRED = 5;
+  const MAX_IMAGES_ALLOWED = 8;
 
   // Set min and max sizes
   const maxSize = isMoodboard ? 400 : 300;

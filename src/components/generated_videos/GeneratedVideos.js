@@ -58,8 +58,16 @@ const GeneratedVideos = ({ chatId, videos }) => {
       }
 
       for (const video of videoUrls) {
-        let storageFilepath = video.split('://')[1]; // To remove the https:// part
-        storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
+        let storageFilepath = null;
+
+        if (video.includes('o/')) {
+          storageFilepath = video.replaceAll('%2F', '/').split('://')[1]; // To remove the https:// part
+          storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
+          storageFilepath = storageFilepath.split('?')[0].split('o/').slice(-1)[0]; // To remove the ? query and the o/ prefix
+        } else {
+          storageFilepath = video.split('://')[1]; // To remove the https:// part
+          storageFilepath = storageFilepath.split('/').slice(2).join('/'); // To remove the bucket name
+        }
 
         const signedUrl = await getDownloadURL(ref(storage, storageFilepath)); // Get the signed URL
         signedUrls_.push(signedUrl);

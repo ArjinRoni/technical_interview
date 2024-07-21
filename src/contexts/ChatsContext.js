@@ -151,6 +151,7 @@ export const ChatsProvider = ({ children }) => {
           text: message.text,
           images: message.images || [],
           shots: message.shots || null,
+          videos: message.videos || null,
           rating: message.rating || 0,
           step: message.step || null,
           suggestions: message.suggestions || [],

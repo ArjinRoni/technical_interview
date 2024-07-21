@@ -7,7 +7,7 @@ export const generateSignedUrls = async ({
   setUploading = () => {},
   setImages = () => {},
 }) => {
-  setUploading(true);
+  setUploading && setUploading(true);
   let signedUrls = [];
 
   for (const image of images) {
@@ -33,6 +33,8 @@ export const generateSignedUrls = async ({
     }
   }
 
-  setImages(signedUrls);
-  setTimeout(() => setUploading(false), 500);
+  setImages && setImages(signedUrls);
+  setUploading && setTimeout(() => setUploading(false), 500);
+
+  return signedUrls;
 };

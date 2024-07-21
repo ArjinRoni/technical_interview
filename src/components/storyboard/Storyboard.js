@@ -255,6 +255,8 @@ const Shot = ({
   shotData,
   setLoadedImages,
   onRefresh = async () => {},
+  shots,
+  setShots = () => {},
 }) => {
   const { primaryFont } = useFont();
   const [currentIndex, setCurrentIndex] = useState(shotData.length - 1);
@@ -270,6 +272,16 @@ const Shot = ({
     setCurrentShotType(shotType);
     setCurrentMotionScale(descaleMotionScale(motionScale, shotType));
   }, [currentIndex, shotData]);
+
+  // Hook to update shots when motion scale updates
+  useEffect(() => {
+    let shots_ = shots;
+    shots_[shotNumber][currentIndex] = {
+      ...shots_[shotNumber][currentIndex],
+      motionScale: scaleMotionScale(currentMotionScale, shotType),
+    };
+    setShots(shots_);
+  }, [currentIndex, currentMotionScale]);
 
   return (
     <div className="storyboard-image-div">
@@ -464,13 +476,17 @@ const Storyboard = ({
         prompt: latestShot.prompt,
         imageUrl: latestShot.imageUrl,
         shotType: latestShot.shotType,
-        motionScale: scaleMotionScale(latestShot.motionScale, latestShot.shotType),
+        motionScale:
+          latestShot.motionScale < 1
+            ? scaleMotionScale(latestShot.motionScale, latestShot.shotType)
+            : latestShot.motionScale,
       };
     });
 
     const prompts = finalShots.map((x) => x.prompt);
     const imageUrls = finalShots.map((x) => x.imageUrl);
     const motionScales = finalShots.map((x) => x.motionScale);
+
     onSubmit(prompts, imageUrls, motionScales);
   };
 
@@ -485,6 +501,8 @@ const Storyboard = ({
           shotData={shotData}
           setLoadedImages={setLoadedImages}
           onRefresh={onRefresh}
+          shots={shots}
+          setShots={setShots}
         />
       ))}
       {isActive && (
