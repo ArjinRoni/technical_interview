@@ -13,7 +13,13 @@ import { useUI } from '@/contexts/UIContext';
 
 import './sidebar.css';
 
-const SidebarButton = ({ src, text, onClick = () => {} }) => {
+const SidebarButton = ({
+  src,
+  text,
+  alignSelf = 'flex-start',
+  marginBottom = undefined,
+  onClick = () => {},
+}) => {
   const buttonRef = useRef(null);
 
   const handleClick = () => {
@@ -33,7 +39,12 @@ const SidebarButton = ({ src, text, onClick = () => {} }) => {
   };
 
   return (
-    <div ref={buttonRef} className="sidebar-button" onClick={handleClick}>
+    <div
+      ref={buttonRef}
+      style={{ alignSelf, marginBottom }}
+      className="sidebar-button"
+      onClick={handleClick}
+    >
       <img className="sidebar-button-img" src={src} />
       <p className="sidebar-button-text">{text}</p>
     </div>
@@ -78,6 +89,19 @@ const Sidebar = () => {
             emoji="rocket"
             onClick={createNewChatAndNavigate}
           />
+          <div className="sidebar-top-buttons">
+            <SidebarButton
+              src="/grid.png"
+              text="Personal Feed"
+              marginBottom={16}
+              onClick={() => router.push('/feed')}
+            />
+            <SidebarButton
+              src="/chemical-bottle.png"
+              text="My Trainings"
+              onClick={() => router.push('/trainings')}
+            />
+          </div>
           <div className="sidebar-chats">
             {chats && chats.length > 0 ? (
               chats.map((chat) => <Chat key={chat.chatNo} chat={chat} />)

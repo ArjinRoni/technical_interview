@@ -1,0 +1,32 @@
+.feed-page {
+    display: flex;
+    height: 100vh;
+}
+
+.feed-div {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding-top: 64px;
+}
+
+.feed-row-info {
+    padding-top: 8px;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    margin-right: 32px;
+    gap: 12px;
+}
+
+.feed-row-videos {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.feed-row {
+    display: flex;
+    flex-direction: row;
+    margin-left: 32px;
+}
