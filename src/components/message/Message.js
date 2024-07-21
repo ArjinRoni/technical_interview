@@ -126,7 +126,13 @@ const Message = ({
                 <Skeleton count={1} />
               </SkeletonTheme>
             </div>
-            <CountdownProgressTimer minutes={10} />
+            <CountdownProgressTimer
+              minutes={
+                step && step === STEPS.VIDEOS && process.env.USE_LEONARDO_API_FOR_VIDEOS === 'true'
+                  ? 1.5
+                  : 10
+              }
+            />
           </div>
         ) : step && step === STEPS.STORYBOARD ? (
           <Storyboard

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import pLimit from 'p-limit';
 import { generateSignedUrls } from './MediaUtils';
 
 const API_BASE_URL = 'https://cloud.leonardo.ai/api/rest/v1';
@@ -91,47 +92,55 @@ export async function handleLeonardoVideoGeneration(imageUrls, motionScales, sto
     setUploading: null,
   });
 
-  const results = [];
-  for (let i = 0; i < signedImageUrls.length; i++) {
-    try {
-      // Step 1: Get a presigned URL
-      const { url: uploadUrl, fields, id: imageId } = await getPresignedUrl();
+  // Create a limit function that allows 4 concurrent operations
+  const limit = pLimit(4);
 
-      // Step 2: Get the image blob and upload the image
-      const imageResponse = await axios.get(signedImageUrls[i], { responseType: 'blob' });
-      const imageBlob = imageResponse.data;
-      await uploadImage(uploadUrl, fields, imageBlob);
+  // Create an array of promises, each handling one image
+  const promises = signedImageUrls.map((signedImageUrl, index) =>
+    limit(async () => {
+      try {
+        // Step 1: Get a presigned URL
+        const { url: uploadUrl, fields, id: imageId } = await getPresignedUrl();
 
-      // Step 3: Generate video
-      const generationId = await generateVideo(imageId, Math.ceil(motionScales[i] / 24));
+        // Step 2: Get the image blob and upload the image
+        const imageResponse = await axios.get(signedImageUrl, { responseType: 'blob' });
+        const imageBlob = imageResponse.data;
+        await uploadImage(uploadUrl, fields, imageBlob);
 
-      // Step 4: Get the generated video
-      let videoData;
-      for (let attempt = 0; attempt < 10; attempt++) {
-        // Try for a total of 10 attemps x 10 seconds = 100 seconds
-        await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait for 10 seconds
-        videoData = await getGeneratedVideo(generationId);
-        if (videoData.generations_by_pk.generated_images.length > 0) break;
+        // Step 3: Generate video
+        const generationId = await generateVideo(imageId, Math.ceil(motionScales[index] / 24));
+
+        // Step 4: Get the generated video
+        let videoData;
+        for (let attempt = 0; attempt < 10; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait for 10 seconds
+          videoData = await getGeneratedVideo(generationId);
+          if (videoData.generations_by_pk.generated_images.length > 0) break;
+        }
+
+        if (!videoData || videoData.generations_by_pk.generated_images.length === 0) {
+          throw new Error('Failed to retrieve video data after multiple attempts');
+        }
+
+        return {
+          originalImageUrl: signedImageUrl,
+          generatedVideoUrl: videoData.generations_by_pk.generated_images[0].motionMP4URL,
+        };
+      } catch (error) {
+        console.error(`Error in video generation process for image ${index + 1}:`, error);
+        return {
+          originalImageUrl: signedImageUrl,
+          generatedVideoUrl: null,
+          error: error.message,
+        };
       }
+    }),
+  );
 
-      if (!videoData || videoData.generations_by_pk.generated_images.length === 0) {
-        throw new Error('Failed to retrieve video data after multiple attempts');
-      }
+  // Wait for all promises to resolve
+  const results = await Promise.all(promises);
 
-      results.push({
-        originalImageUrl: signedImageUrls[i],
-        generatedVideoUrl: videoData.generations_by_pk.generated_images[0].motionMP4URL,
-      });
-    } catch (error) {
-      console.error(`Error in video generation process for image ${i + 1}:`, error);
-      results.push({
-        originalImageUrl: signedImageUrls[i],
-        generatedVideoUrl: null,
-        error: error.message,
-      });
-    }
-  }
-
+  // Return only the generated video URLs
   return results.map((x) => x.generatedVideoUrl);
 }
 

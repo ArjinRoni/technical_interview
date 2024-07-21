@@ -8,6 +8,7 @@ const nextConfig = {
     INSTANCE_CERTIFICATE: process.env.INSTANCE_CERTIFICATE,
     MIXPANEL_TOKEN: process.env.MIXPANEL_TOKEN,
     LEONARDO_TOKEN: process.env.LEONARDO_TOKEN,
+    USE_LEONARDO_API_FOR_VIDEOS: process.env.USE_LEONARDO_API_FOR_VIDEOS,
   },
   images: {
     remotePatterns: [

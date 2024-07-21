@@ -748,11 +748,11 @@ const ChatPage = ({ params }) => {
     imageUrls,
     motionScales = [80, 80, 80, 80],
     simulate = false,
-    useLeonardoAI = true, // TODO: Can we use an environment variable here?
+    useLeonardoAI = process.env.USE_LEONARDO_API_FOR_VIDEOS === 'true',
   ) => {
     try {
       // Add a skeleton message
-      setMessages((prev) => [...prev, MESSAGES.SKELETON]);
+      setMessages((prev) => [...prev, { ...MESSAGES.SKELETON, step: STEPS.VIDEOS }]);
 
       const { classificationToken: classificationToken_ } = await getChatDetails(currentChat.id);
 
