@@ -693,6 +693,9 @@ const ChatPage = ({ params }) => {
         const response = await fetch(videoUrl);
         const videoBlob = await response.blob();
 
+        // Create a new Blob with the correct MIME type
+        const videoFile = new Blob([videoBlob], { type: 'video/mp4' });
+
         // Create a unique filename
         const filename = `${uuidv4()}.mp4`;
         const filePath = `users/${userId}/${chatId}/outputs/videos/${filename}`;
@@ -701,7 +704,7 @@ const ChatPage = ({ params }) => {
         const storageRef = ref(storage, filePath);
 
         // Upload to Firebase Storage
-        await uploadBytes(storageRef, videoBlob);
+        await uploadBytes(storageRef, videoFile, { contentType: 'video/mp4' });
 
         // Get the download URL
         const url = await getDownloadURL(storageRef);
