@@ -10,6 +10,7 @@ import { useFB } from '@/contexts/FBContext';
 const GeneratedVideos = ({ chatId, videos }) => {
   const { user } = useAuth();
   const { storage } = useFB();
+
   const [signedUrls, setSignedUrls] = useState(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [videoSize, setVideoSize] = useState(0);
