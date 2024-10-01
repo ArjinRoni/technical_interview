@@ -12,6 +12,7 @@ import { MadisonProvider } from '@/contexts/MadisonContext';
 import { ChatsProvider } from '@/contexts/ChatsContext';
 import { FontProvider } from '@/contexts/FontContext';
 import { UIProvider } from '@/contexts/UIContext';
+import { BackgroundReplacerProvider } from '@/contexts/BackgroundReplacerContext'; // Import the BackgroundReplacerProvider
 
 export default function RootLayout({ children }) {
   // Hook to set the title and meta description tags for the application
@@ -40,12 +41,14 @@ export default function RootLayout({ children }) {
             <AuthProvider>
               <UIProvider>
                 <MadisonProvider>
-                  <ChatsProvider>
-                    <Toaster />
-                    {children}
-                    <Analytics />
-                    <SpeedInsights />
-                  </ChatsProvider>
+                  <BackgroundReplacerProvider> {/* Wrap with BackgroundReplacerProvider */}
+                    <ChatsProvider>
+                      <Toaster />
+                      {children}
+                      <Analytics />
+                      <SpeedInsights />
+                    </ChatsProvider>
+                  </BackgroundReplacerProvider>
                 </MadisonProvider>
               </UIProvider>
             </AuthProvider>

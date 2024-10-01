@@ -98,6 +98,18 @@ const Sidebar = () => {
             />
             <SidebarButton
               src="/chemical-bottle.png"
+              text="Background Replacer"
+              marginBottom={16}
+              onClick={() => router.push('/background-replacer')}
+            />
+            <SidebarButton
+              src="/chemical-bottle.png"
+              text="Image Generator"
+              marginBottom={16}
+              onClick={() => router.push('/image-generator')}
+            />
+            <SidebarButton
+              src="/chemical-bottle.png"
               text="My Trainings"
               onClick={() => router.push('/trainings')}
             />

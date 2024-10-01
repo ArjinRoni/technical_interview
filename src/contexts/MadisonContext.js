@@ -34,6 +34,12 @@ export const MadisonProvider = ({ children }) => {
     dangerouslyAllowBrowser: true,
   });
 
+  const openaiApiKey = process.env.OPENAI_API_KEY;
+
+  if (!openaiApiKey) {
+    throw new Error('The OPENAI_API_KEY environment variable is missing or empty; either provide it, or instantiate the OpenAI client with an apiKey option, like new OpenAI({ apiKey: \'My API Key\' }).');
+  }
+
   // Function to create OR retrieve the assistant ID
   const createOrRetrieveAssistant = async () => {
     if (process.env.ASSISTANT_ID) {

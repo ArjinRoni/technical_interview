@@ -1,0 +1,195 @@
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+}
+
+.contentContainer {
+  display: flex;
+  flex-grow: 1;
+  padding: 2rem;
+  margin-left: 216px; /* Adjust this value based on your sidebar width */
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  width: 40%; /* Reduced from 50% */
+  gap: 20px;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  width: 60%; /* Increased from 50% */
+  margin-left: 20px;
+}
+
+.urlInputContainer {
+  width: 100%; /* Make it full width of the left column */
+  background-color: rgba(var(--card-rgb), 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(var(--card-border-rgb), 0.15);
+  padding: 1rem;
+  max-width: 400px; /* Add this to narrow down the fetch text box */
+}
+
+.form {
+  display: flex;
+  width: 100%;
+}
+
+.input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  background-color: rgba(var(--card-rgb), 0.1);
+  border: 1px solid rgba(var(--card-border-rgb), 0.15);
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  color: var(--foreground-rgb);
+  font-size: 0.9rem; /* Slightly smaller font size */
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  background-color: var(--primary-glow);
+  color: var(--background-start-rgb);
+  border: none;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  cursor: pointer;
+  font-size: 0.9rem; /* Slightly smaller font size */
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: var(--secondary-glow);
+}
+
+.fetchedImageContainer, .rectangle, .generatedImageContainer {
+  background-color: rgba(var(--card-rgb), 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(var(--card-border-rgb), 0.15);
+  padding: 1rem;
+}
+
+.fetchedImageContainer {
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.fetchedImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.rectangle h3 {
+  font-size: 1em; /* Keep the title size relative to the new base font size */
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: var(--primary-glow);
+  font-size: 0.8em; /* Make the font 20% smaller for parsed info */
+}
+
+.description {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.featuresList {
+  list-style-type: none;
+  padding: 0;
+  padding-left: 1.2em; /* Add some left padding for the list */
+}
+
+.featuresList li {
+  margin-bottom: 0.25rem;
+}
+
+.generatedImageContainer {
+  position: relative;
+  height: 500px; /* Increased from 400px to make it bigger */
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(var(--card-rgb), 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(var(--card-border-rgb), 0.15);
+}
+
+.generatedImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.number {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 1.5rem;
+  color: var(--primary-glow);
+}
+
+.bottomRectangles {
+  display: flex;
+  gap: 20px;
+}
+
+.bottomRectangles .rectangle {
+  flex: 1;
+}
+
+.additionalInputContainer {
+  width: 100%; /* Make it full width of the left column */
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.additionalInput {
+  width: 100%;
+  height: 80px; /* Reduced from 100px */
+  padding: 0.5rem;
+  background-color: rgba(var(--card-rgb), 0.1);
+  border: 1px solid rgba(var(--card-border-rgb), 0.15);
+  border-radius: var(--border-radius);
+  color: var(--foreground-rgb);
+  font-size: 0.9rem; /* Slightly smaller font size */
+  resize: vertical;
+}
+
+.generateButton {
+  width: 100%; /* Make the button full width */
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: var(--primary-glow);
+  color: var(--background-start-rgb);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 0.9rem; /* Slightly smaller font size */
+  transition: background-color 0.3s ease;
+}
+
+.generateButton:hover {
+  background-color: var(--secondary-glow);
+}
+
+.promptsContainer {
+  background-color: rgba(var(--card-rgb), 0.1);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(var(--card-border-rgb), 0.15);
+  padding: 1rem;
+  margin-top: 20px;
+}
+
+/* Add this new style for the placeholder text */
+.placeholderText {
+  text-align: center;
+  color: var(--foreground-rgb);
+}
