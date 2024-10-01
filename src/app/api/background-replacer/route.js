@@ -87,6 +87,10 @@ export async function POST(request) {
 
     console.log('Function arguments:', functionArgs);
 
+    // Append the additional prompt to prompt_style and prompt_main
+    functionArgs.prompt_style += ADDITIONAL_PROMPT;
+    functionArgs.prompt_main += ADDITIONAL_PROMPT;
+
     // Send the generated prompts and the standard Base64 image to the external background replacement service
     const externalResponse = await axios.post('http://34.81.132.129:5000/replace_background', {
       ...functionArgs,
