@@ -39,7 +39,7 @@ export const config = {
   instructions: instructions,
   model: 'gpt-4o', // 'gpt-4-0125-preview'
   temperature: 0.9,
-  tools: [
+  functions: [ // Changed from 'tools' to 'functions'
     {
       type: 'function',
       function: {

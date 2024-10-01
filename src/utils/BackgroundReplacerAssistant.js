@@ -22,34 +22,31 @@ export const bgReplacerConfig = {
   instructions: bgReplacerInstructions,
   model: 'gpt-4o', // Ensure you're using the correct model
   temperature: 0.7,
-  tools: [
+  functions: [
     {
-      type: "function",
-      function: {
-        name: "generate_background_replacement_prompts",
-        description: "Generate prompts for background replacement based on product information",
-        parameters: {
-          type: "object",
-          properties: {
-            prompt_style: {
-              type: "string",
-              description: "Style prompt for the background replacement keep this at minimum 20 tokens"
-            },
-            prompt_main: {
-              type: "string",
-              description: "Main prompt describing the image content, keep this at minimum 25 tokens"
-            },
-            classification_token: {
-              type: "string",
-              description: "Token for classifying the object of advertisement"
-            },
-            url: {
-              type: "string",
-              description: "URL of the product image"
-            }
+      name: "generate_background_replacement_prompts",
+      description: "Generate prompts for background replacement based on product information",
+      parameters: {
+        type: "object",
+        properties: {
+          prompt_style: {
+            type: "string",
+            description: "Style prompt for the background replacement keep this at minimum 20 tokens"
           },
-          required: ["prompt_style", "prompt_main", "classification_token", "url"]
-        }
+          prompt_main: {
+            type: "string",
+            description: "Main prompt describing the image content, keep this at minimum 25 tokens"
+          },
+          classification_token: {
+            type: "string",
+            description: "Token for classifying the object of advertisement"
+          },
+          url: {
+            type: "string",
+            description: "URL of the product image"
+          }
+        },
+        required: ["prompt_style", "prompt_main", "classification_token", "url"]
       }
     }
   ],
