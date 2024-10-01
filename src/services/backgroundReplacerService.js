@@ -23,5 +23,26 @@ export const backgroundReplacerService = {
         error: error.message || 'An unexpected error occurred'
       };
     }
+  },
+
+  enhanceImage: async (imageBase64) => {
+    try {
+      const response = await axios.post('/api/upscale-image', { imageBase64 });
+      
+      if (response.data.success) {
+        return {
+          success: true,
+          data: response.data.data
+        };
+      } else {
+        throw new Error(response.data.error || 'Image enhancement failed');
+      }
+    } catch (error) {
+      console.error('Error in image enhancement service:', error);
+      return {
+        success: false,
+        error: error.message || 'An unexpected error occurred'
+      };
+    }
   }
 };

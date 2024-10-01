@@ -10,7 +10,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const ADDITIONAL_PROMPT = ", high quality, cinematic, ((photoshoot)), professional product photography";
+const ADDITIONAL_PROMPT = ", high quality, cinematic, photoshoot, professional product photography";
 
 const EXTERNAL_SERVICE_URL = 'http://34.81.132.129:5000/replace_background';
 

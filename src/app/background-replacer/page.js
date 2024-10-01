@@ -16,8 +16,10 @@ const BackgroundReplacer = () => {
   const [replacedImage, setReplacedImage] = useState(null);
   const [signedUrl, setSignedUrl] = useState(null);
   const [originalPrompts, setOriginalPrompts] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isEnhanced, setIsEnhanced] = useState(false);
 
-  const { processProductInfo, isProcessing, backgroundImage } = useBackgroundReplacer();
+  const { processProductInfo, enhanceImage, isProcessing: isProcessingFromContext, backgroundImage } = useBackgroundReplacer();
   const { storage } = useFB();
 
   const handleSubmit = async (e) => {
@@ -68,6 +70,22 @@ const BackgroundReplacer = () => {
     } catch (error) {
       console.error("Error in handleGenerate:", error);
       setError(error.message || 'An error occurred during image generation');
+    }
+  };
+
+  const handleEnhance = async () => {
+    try {
+      setError(null);
+      const result = await enhanceImage(replacedImage);
+      if (result.success) {
+        setReplacedImage(result.data.upscaledImage);
+        setIsEnhanced(true);
+      } else {
+        throw new Error(result.error || 'Image enhancement failed');
+      }
+    } catch (error) {
+      console.error('Error enhancing image:', error);
+      setError('An error occurred while enhancing the image');
     }
   };
 
@@ -156,13 +174,31 @@ const BackgroundReplacer = () => {
         <div className={styles.rightColumn}>
           <div className={styles.generatedImageContainer}>
             {isProcessing ? (
-              <div className={styles.generatedImage}>Processing...</div>
-            ) : replacedImage ? (
-              <img 
-                src={`data:image/png;base64,${replacedImage}`}
-                alt="Generated Image" 
-                className={styles.generatedImage}
-              />
+              <div className={styles.processingOverlay}>
+                <div className={styles.spinner}></div>
+                <p>Enhancing image...</p>
+              </div>
+            ) : null}
+            {replacedImage ? (
+              <>
+                <img 
+                  src={`data:image/png;base64,${replacedImage}`}
+                  alt="Generated Image" 
+                  className={styles.generatedImage}
+                />
+                {!isEnhanced && (
+                  <button 
+                    onClick={handleEnhance}
+                    className={styles.enhanceButton}
+                    disabled={isProcessing}
+                  >
+                    Enhance
+                  </button>
+                )}
+                {isEnhanced && (
+                  <div className={styles.enhancedLabel}>Enhanced</div>
+                )}
+              </>
             ) : (
               <div className={styles.generatedImage}>No image generated yet</div>
             )}

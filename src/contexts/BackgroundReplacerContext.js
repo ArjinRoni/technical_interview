@@ -4,6 +4,7 @@ import { backgroundReplacerService } from '@/services/backgroundReplacerService'
 
 export const BackgroundReplacerContext = createContext({
   processProductInfo: async () => {},
+  enhanceImage: async () => {},
   isProcessing: false,
   backgroundImage: null,
   originalPrompts: null,
@@ -37,10 +38,29 @@ export const BackgroundReplacerProvider = ({ children }) => {
     }
   };
 
+  const enhanceImage = async (imageBase64) => {
+    setIsProcessing(true);
+    try {
+      const result = await backgroundReplacerService.enhanceImage(imageBase64);
+      setIsProcessing(false);
+      if (result.success) {
+        setBackgroundImage(result.data.upscaledImage);
+        return result;
+      } else {
+        throw new Error(result.error || 'Image enhancement failed');
+      }
+    } catch (error) {
+      setIsProcessing(false);
+      console.error('Error enhancing image:', error);
+      throw error;
+    }
+  };
+
   return (
     <BackgroundReplacerContext.Provider
       value={{
         processProductInfo,
+        enhanceImage,
         isProcessing,
         backgroundImage,
         originalPrompts,
